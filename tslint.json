@@ -1,0 +1,16 @@
+{
+  "extends": ["tslint-config-standard"],
+  "rules": {
+    "no-console": false,
+    "semicolon": [true, "never"],
+    "quotemark": [true, "single"],
+    "trailing-comma": [true, {
+      "multiline": "never",
+      "singleline": "never"
+    }],
+    "object-literal-sort-keys": false,
+    "ordered-imports": false,
+    "interface-name": false,
+    "no-var-requires": false
+  }
+}

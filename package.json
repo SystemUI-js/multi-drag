@@ -1,0 +1,21 @@
+{
+  "name": "multi-drag",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "tslint --project tsconfig.json",
+    "lint:fix": "tslint --project tsconfig.json --fix"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "tslint": "^6.1.3",
+    "tslint-config-standard": "^9.0.0",
+    "vite-plugin-checker": "^0.6.2"
+  }
+}
