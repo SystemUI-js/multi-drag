@@ -2,7 +2,7 @@
 
 ## DEMO
 
-![img.png](./src/assets/img.png)
+![img.png](./src/assets/demo.gif)
 
 [DEMO](https://systemui-js.github.io/multi-drag/)
 
