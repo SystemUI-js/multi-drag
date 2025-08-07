@@ -3,8 +3,9 @@ import { Drag } from '../drag'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
-    <h1>Multi Drag Project</h1>
-    <p>Vite + TypeScript + TSLint with Standard Configuration</p>
+    <h1>多指操作（Multi Drag Project）</h1>
+    <p>基于Vite + TypeScript打造（Build with Vite + TypeScript）</p>
+    <p>试试多个手指同时拖动Item（Try to drag these Items with MULTI FINGERS at same time）</p>
     <div id="drag-container">
       <div class="draggable-item">Item 1</div>
       <div class="draggable-item">Item 2</div>
