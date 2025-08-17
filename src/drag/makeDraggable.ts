@@ -52,7 +52,8 @@ export function makeDraggable(
   let startDragPosition: Position
 
   const dragOptions: DragOptions = {
-    onDragStart: (element: HTMLElement, event: DragEvent) => {
+    onDragStart: (element: HTMLElement, events: DragEvent[]) => {
+      const event = events[0]
       // Get the current position of the element
       initialPosition = getPosition(element)
       // Store the starting drag coordinates
@@ -65,7 +66,8 @@ export function makeDraggable(
       }
     },
 
-    onDragMove: (element: HTMLElement, event: DragEvent) => {
+    onDragMove: (element: HTMLElement, events: DragEvent[]) => {
+      const event = events[0]
       // Calculate the relative movement from the start position
       const deltaX = event.clientX - startDragPosition.x
       const deltaY = event.clientY - startDragPosition.y
@@ -80,7 +82,7 @@ export function makeDraggable(
       setPosition(element, newPosition)
     },
 
-    onDragEnd: (_element: HTMLElement, _event: DragEvent) => {
+    onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
       // Optional: Could add cleanup or final position adjustment here
     }
   }

@@ -116,6 +116,7 @@ public
 
 # IDE and Editor files
 .vscode/
+.history/
 .idea/
 *.swp
 *.swo
@@ -144,3 +145,7 @@ temp/
 # Vite
 dist-ssr
 *.local
+
+# 一些框架的生成文件
+test-results/
+playwright-report/

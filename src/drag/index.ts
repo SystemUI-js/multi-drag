@@ -1,9 +1,9 @@
 import { dragManager, type DragEvent } from '../dragManager'
 
 export interface DragOptions {
-  onDragStart?: (element: HTMLElement, event: DragEvent) => void
-  onDragMove?: (element: HTMLElement, event: DragEvent) => void
-  onDragEnd?: (element: HTMLElement, event: DragEvent) => void
+  onDragStart?: (element: HTMLElement, events: DragEvent[]) => void
+  onDragMove?: (element: HTMLElement, events: DragEvent[]) => void
+  onDragEnd?: (element: HTMLElement, events: DragEvent[]) => void
 }
 
 export class Drag {
@@ -20,47 +20,47 @@ export class Drag {
   }
 
   // Called by DragManager when a drag start event occurs
-  handleStart(event: DragEvent): boolean {
-    // Check if the event target is this element or a child of this element
-    const target = event.originalEvent.target as HTMLElement
-    if (!this.element.contains(target)) {
-      return false
-    }
+  handleStart(events: DragEvent[]): boolean {
+    if (!events || events.length === 0) return false
+    // Ensure at least one event's target is inside this element
+    const isTargeted = events.some(e => {
+      const target = e.target as HTMLElement | null
+      return target ? this.element.contains(target) : false
+    })
+    if (!isTargeted) return false
 
-    // Check if this element is already being dragged (locking mechanism)
-    if (dragManager.isElementBeingDragged(this.element)) {
-      return false
-    }
-
+    // Allow multiple touches on same element; mark dragging on first batch
     this.isDragging = true
 
     // Call user-defined onDragStart callback
     if (this.options.onDragStart) {
-      this.options.onDragStart(this.element, event)
+      this.options.onDragStart(this.element, events)
     }
 
     return true
   }
 
   // Called by DragManager when a drag move event occurs
-  handleMove(event: DragEvent): void {
+  handleMove(events: DragEvent[]): void {
     if (!this.isDragging) return
 
     // Call user-defined onDragMove callback
     if (this.options.onDragMove) {
-      this.options.onDragMove(this.element, event)
+      this.options.onDragMove(this.element, events)
     }
   }
 
   // Called by DragManager when a drag end event occurs
-  handleEnd(event: DragEvent): void {
+  handleEnd(events: DragEvent[]): void {
     if (!this.isDragging) return
 
+    // If all identifiers associated to this element ended, DragManager will clear lock;
+    // at Drag level we can mark false when we receive any end group
     this.isDragging = false
 
     // Call user-defined onDragEnd callback
     if (this.options.onDragEnd) {
-      this.options.onDragEnd(this.element, event)
+      this.options.onDragEnd(this.element, events)
     }
   }
 
