@@ -29,7 +29,7 @@ const moveScriptsToBody = () => {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === 'production' ? '/multi-drag/' : '/',
+  base: '/multi-drag/',
   plugins: [
     checker({
       typescript: true,
