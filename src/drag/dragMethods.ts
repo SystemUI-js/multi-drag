@@ -39,8 +39,8 @@ export function getPoseFromElement(element: HTMLElement): Pose {
   // 从 left 和 top 样式获取位置
   const left = parseFloat(style.left) || 0
   const top = parseFloat(style.top) || 0
-  const globalLeft = element.getBoundingClientRect().left
-  const globalTop = element.getBoundingClientRect().top
+  // const globalLeft = element.getBoundingClientRect().left
+  // const globalTop = element.getBoundingClientRect().top
 
   // 从 transform 获取缩放和旋转
   const transform = style.transform
