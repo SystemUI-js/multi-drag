@@ -11,12 +11,44 @@ export class MatrixTransforms {
    * @param pose 元素的姿态信息
    */
   static poseToMatrix(pose: Pose) {
-    const rotation = MathUtils.degToRad(pose.rotateDeg)
+    // 从style中解析变换信息
+    const left = parseFloat(pose.style.left) || 0
+    const top = parseFloat(pose.style.top) || 0
+
+        // 解析transform获取scale和rotation
+    const transform = pose.style.transform
+    let scale = 1
+    let rotateDeg = 0
+
+    if (transform && transform !== 'none') {
+      // 尝试解析matrix格式
+      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      if (matrixMatch) {
+        const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
+        const [a, b] = values
+        scale = Math.sqrt((a || 1) * (a || 1) + (b || 0) * (b || 0)) || 1
+        const rotateRad = Math.atan2(b || 0, a || 1)
+        rotateDeg = (rotateRad * 180) / Math.PI
+      } else {
+        // 尝试解析rotate和scale函数格式
+        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
+        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+
+        if (rotateMatch) {
+          rotateDeg = parseFloat(rotateMatch[1])
+        }
+        if (scaleMatch) {
+          scale = parseFloat(scaleMatch[1])
+        }
+      }
+    }
+
+    const rotation = MathUtils.degToRad(rotateDeg)
     return MathUtils.createTransformMatrix(
-      pose.left,
-      pose.top,
-      pose.scale,
-      pose.scale,
+      left,
+      top,
+      scale,
+      scale,
       rotation
     )
   }
@@ -28,12 +60,53 @@ export class MatrixTransforms {
    * @param toPose 目标姿态
    */
   static calculateTransformDelta(fromPose: Pose, toPose: Pose) {
+    // 从style中提取变换信息
+    const fromLeft = parseFloat(fromPose.style.left) || 0
+    const fromTop = parseFloat(fromPose.style.top) || 0
+    const toLeft = parseFloat(toPose.style.left) || 0
+    const toTop = parseFloat(toPose.style.top) || 0
+
+        // 解析scale和rotation
+    const extractTransformInfo = (style: CSSStyleDeclaration) => {
+      const transform = style.transform
+      let scale = 1
+      let rotateDeg = 0
+
+      if (transform && transform !== 'none') {
+        // 尝试解析matrix格式
+        const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+        if (matrixMatch) {
+          const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
+          const [a, b] = values
+          scale = Math.sqrt((a || 1) * (a || 1) + (b || 0) * (b || 0)) || 1
+          const rotateRad = Math.atan2(b || 0, a || 1)
+          rotateDeg = (rotateRad * 180) / Math.PI
+        } else {
+          // 尝试解析rotate和scale函数格式
+          const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
+          const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+
+          if (rotateMatch) {
+            rotateDeg = parseFloat(rotateMatch[1])
+          }
+          if (scaleMatch) {
+            scale = parseFloat(scaleMatch[1])
+          }
+        }
+      }
+
+      return { scale, rotateDeg }
+    }
+
+    const fromTransform = extractTransformInfo(fromPose.style)
+    const toTransform = extractTransformInfo(toPose.style)
+
     // 计算差值（这里是简化版本，实际可能需要矩阵求逆）
     return {
-      deltaX: toPose.left - fromPose.left,
-      deltaY: toPose.top - fromPose.top,
-      deltaScale: toPose.scale / fromPose.scale,
-      deltaRotation: toPose.rotateDeg - fromPose.rotateDeg
+      deltaX: toLeft - fromLeft,
+      deltaY: toTop - fromTop,
+      deltaScale: fromTransform.scale !== 0 ? toTransform.scale / fromTransform.scale : toTransform.scale,
+      deltaRotation: toTransform.rotateDeg - fromTransform.rotateDeg
     }
   }
 
@@ -59,14 +132,42 @@ export class MatrixTransforms {
     const offsetX = touchX - centerX
     const offsetY = touchY - centerY
 
+        // 从style中解析变换信息
+    const transform = pose.style.transform
+    let scale = 1
+    let rotateDeg = 0
+
+    if (transform && transform !== 'none') {
+      // 尝试解析matrix格式
+      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      if (matrixMatch) {
+        const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
+        const [a, b] = values
+        scale = Math.sqrt((a || 1) * (a || 1) + (b || 0) * (b || 0)) || 1
+        const rotateRad = Math.atan2(b || 0, a || 1)
+        rotateDeg = (rotateRad * 180) / Math.PI
+      } else {
+        // 尝试解析rotate和scale函数格式
+        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
+        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+
+        if (rotateMatch) {
+          rotateDeg = parseFloat(rotateMatch[1])
+        }
+        if (scaleMatch) {
+          scale = parseFloat(scaleMatch[1])
+        }
+      }
+    }
+
     // 考虑旋转的影响，计算触摸点在元素局部坐标系中的位置
-    const rotation = MathUtils.degToRad(pose.rotateDeg)
+    const rotation = MathUtils.degToRad(rotateDeg)
     const cosR = Math.cos(rotation)
     const sinR = Math.sin(rotation)
 
     // 逆旋转变换
-    const localX = (offsetX * cosR + offsetY * sinR) / pose.scale
-    const localY = (-offsetX * sinR + offsetY * cosR) / pose.scale
+    const localX = (offsetX * cosR + offsetY * sinR) / scale
+    const localY = (-offsetX * sinR + offsetY * cosR) / scale
 
     // 转换为相对百分比
     const relativeX = localX / width
@@ -103,12 +204,40 @@ export class MatrixTransforms {
     const localX = relativeX * width
     const localY = relativeY * height
 
+        // 从style中解析变换信息
+    const transform = newPose.style.transform
+    let scale = 1
+    let rotateDeg = 0
+
+    if (transform && transform !== 'none') {
+      // 尝试解析matrix格式
+      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      if (matrixMatch) {
+        const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
+        const [a, b] = values
+        scale = Math.sqrt((a || 1) * (a || 1) + (b || 0) * (b || 0)) || 1
+        const rotateRad = Math.atan2(b || 0, a || 1)
+        rotateDeg = (rotateRad * 180) / Math.PI
+      } else {
+        // 尝试解析rotate和scale函数格式
+        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
+        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+
+        if (rotateMatch) {
+          rotateDeg = parseFloat(rotateMatch[1])
+        }
+        if (scaleMatch) {
+          scale = parseFloat(scaleMatch[1])
+        }
+      }
+    }
+
     // 应用缩放
-    const scaledX = localX * newPose.scale
-    const scaledY = localY * newPose.scale
+    const scaledX = localX * scale
+    const scaledY = localY * scale
 
     // 应用旋转
-    const rotation = MathUtils.degToRad(newPose.rotateDeg)
+    const rotation = MathUtils.degToRad(rotateDeg)
     const cosR = Math.cos(rotation)
     const sinR = Math.sin(rotation)
 
@@ -130,37 +259,87 @@ export class MatrixTransforms {
    * @param t 插值参数 (0-1)
    */
   static interpolatePose(fromPose: Pose, toPose: Pose, t: number): Pose {
+        // 从style中提取变换信息
+    const extractTransformInfo = (style: CSSStyleDeclaration) => {
+      const left = parseFloat(style.left) || 0
+      const top = parseFloat(style.top) || 0
+      const transform = style.transform
+      let scale = 1
+      let rotateDeg = 0
+
+      if (transform && transform !== 'none') {
+        // 尝试解析matrix格式
+        const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+        if (matrixMatch) {
+          const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
+          const [a, b] = values
+          scale = Math.sqrt((a || 1) * (a || 1) + (b || 0) * (b || 0)) || 1
+          const rotateRad = Math.atan2(b || 0, a || 1)
+          rotateDeg = (rotateRad * 180) / Math.PI
+        } else {
+          // 尝试解析rotate和scale函数格式
+          const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
+          const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+
+          if (rotateMatch) {
+            rotateDeg = parseFloat(rotateMatch[1])
+          }
+          if (scaleMatch) {
+            scale = parseFloat(scaleMatch[1])
+          }
+        }
+      }
+
+      return { left, top, scale, rotateDeg }
+    }
+
+    const fromTransform = extractTransformInfo(fromPose.style)
+    const toTransform = extractTransformInfo(toPose.style)
+
     // 使用 math.js 的表达式计算进行插值
     const lerpX = MathUtils.evaluate('from + (to - from) * t', {
-      from: fromPose.left,
-      to: toPose.left,
+      from: fromTransform.left,
+      to: toTransform.left,
       t
     })
 
     const lerpY = MathUtils.evaluate('from + (to - from) * t', {
-      from: fromPose.top,
-      to: toPose.top,
+      from: fromTransform.top,
+      to: toTransform.top,
       t
     })
 
     const lerpScale = MathUtils.evaluate('from + (to - from) * t', {
-      from: fromPose.scale,
-      to: toPose.scale,
+      from: fromTransform.scale,
+      to: toTransform.scale,
       t
     })
 
     // 角度插值需要考虑最短路径
-    let angleDiff = toPose.rotateDeg - fromPose.rotateDeg
+    let angleDiff = toTransform.rotateDeg - fromTransform.rotateDeg
     if (angleDiff > 180) angleDiff -= 360
     if (angleDiff < -180) angleDiff += 360
 
-    const lerpRotation = fromPose.rotateDeg + angleDiff * t
+    const lerpRotation = fromTransform.rotateDeg + angleDiff * t
+
+    // 创建插值后的样式
+    const interpolatedStyle = document.createElement('div').style
+    interpolatedStyle.position = 'absolute'
+    interpolatedStyle.left = `${lerpX}px`
+    interpolatedStyle.top = `${lerpY}px`
+    interpolatedStyle.transform = `rotate(${lerpRotation}deg) scale(${lerpScale})`
+
+    // 创建插值后的矩形（简化版本，实际可能需要更复杂的计算）
+    const interpolatedRect = new DOMRect(
+      lerpX,
+      lerpY,
+      fromPose.rect.width,
+      fromPose.rect.height
+    )
 
     return {
-      left: lerpX,
-      top: lerpY,
-      scale: lerpScale,
-      rotateDeg: lerpRotation
+      rect: interpolatedRect,
+      style: interpolatedStyle
     }
   }
 }

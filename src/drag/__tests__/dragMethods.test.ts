@@ -19,6 +19,19 @@ function createMockDragEvent(x: number, y: number, identifier: string | number =
     }
 }
 
+// 创建模拟的 Pose 对象
+function createMockPose(left: number = 0, top: number = 0, scale: number = 1, rotateDeg: number = 0): Pose {
+    const style = document.createElement('div').style
+    style.position = 'absolute'
+    style.left = `${left}px`
+    style.top = `${top}px`
+    style.transform = `rotate(${rotateDeg}deg) scale(${scale})`
+
+    const rect = new DOMRect(left, top, 100, 100) // 默认100x100尺寸
+
+    return { rect, style }
+}
+
 describe('dragMethods', () => {
     let testElement: HTMLElement
 
@@ -38,48 +51,50 @@ describe('dragMethods', () => {
     })
 
     describe('getPoseFromElement', () => {
-        test('应该从无 transform 的元素获取默认姿态', () => {
+        test('应该从元素获取rect和style信息', () => {
             const pose = getPoseFromElement(testElement)
-            expect(pose).toEqual({
-                left: 0,
-                top: 0,
-                scale: 1,
-                rotateDeg: 0
-            })
+
+            // 验证返回的Pose对象包含rect和style
+            expect(pose.rect).toBeDefined()
+            expect(pose.style).toBeDefined()
+            expect(pose.rect).toBeInstanceOf(DOMRect)
+            expect(pose.style).toBeInstanceOf(CSSStyleDeclaration)
         })
 
-        test('应该从有 transform 的元素正确解析姿态', () => {
-            // 在 JSDOM 中直接设置 matrix 值来模拟浏览器行为
-            // matrix(a, b, c, d, e, f) 对应 matrix(scaleX*cos, scaleX*sin, -scaleY*sin, scaleY*cos, translateX, translateY)
-            // 对于 scale(1.5) rotate(45deg) translate(10px, 20px)，大约的 matrix 值：
-            const cos45 = Math.cos(45 * Math.PI / 180)
-            const sin45 = Math.sin(45 * Math.PI / 180)
-            const a = 1.5 * cos45  // ≈ 1.06
-            const b = 1.5 * sin45  // ≈ 1.06
-            const c = -1.5 * sin45 // ≈ -1.06
-            const d = 1.5 * cos45  // ≈ 1.06
-
-            // 设置 left 和 top 样式来模拟位置
+        test('应该正确获取元素的边界矩形和样式', () => {
+            // 设置测试元素的样式
             testElement.style.left = '10px'
             testElement.style.top = '20px'
-            testElement.style.transform = `matrix(${a}, ${b}, ${c}, ${d}, 0, 0)` // 只包含缩放和旋转
+            testElement.style.transform = 'rotate(45deg) scale(1.5)'
+
+            // 模拟getBoundingClientRect
+            testElement.getBoundingClientRect = jest.fn(() => ({
+                left: 10,
+                top: 20,
+                width: 100,
+                height: 100,
+                right: 110,
+                bottom: 120,
+                x: 10,
+                y: 20,
+                toJSON: () => {}
+            } as DOMRect))
+
             const pose = getPoseFromElement(testElement)
 
-            expect(pose.left).toBeCloseTo(10, 1)
-            expect(pose.top).toBeCloseTo(20, 1)
-            expect(pose.scale).toBeCloseTo(1.5, 1)
-            expect(pose.rotateDeg).toBeCloseTo(45, 1)
+            expect(pose.rect.left).toBe(10)
+            expect(pose.rect.top).toBe(20)
+            expect(pose.rect.width).toBe(100)
+            expect(pose.rect.height).toBe(100)
+            expect(pose.style.left).toBe('10px')
+            expect(pose.style.top).toBe('20px')
+            expect(pose.style.transform).toBe('rotate(45deg) scale(1.5)')
         })
     })
 
     describe('applyPoseToElement', () => {
         test('应该正确应用姿态到元素', () => {
-            const pose: Pose = {
-                left: 50,
-                top: 100,
-                scale: 2,
-                rotateDeg: 90
-            }
+            const pose = createMockPose(50, 100, 2, 90)
 
             applyPoseToElement(testElement, pose)
 
@@ -93,7 +108,7 @@ describe('dragMethods', () => {
 
     describe('keepTouchesRelative', () => {
         test('应该在单指时进行拖拽，保持缩放和旋转不变', () => {
-            const initialPose: Pose = { left: 50, top: 60, scale: 1.5, rotateDeg: 30 }
+            const initialPose = createMockPose(50, 60, 1.5, 30)
             const startEvents = [createMockDragEvent(100, 100)]
             const currentEvents = [createMockDragEvent(150, 120)] // 移动了 50, 20
 
@@ -119,7 +134,7 @@ describe('dragMethods', () => {
             testElement.style.left = '100px'
             testElement.style.top = '100px'
 
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             // 两指在元素上的初始位置
             const startEvents = [
@@ -158,7 +173,7 @@ describe('dragMethods', () => {
         })
 
         test('应该设置正确的 transform-origin', () => {
-            const initialPose: Pose = { left: 0, top: 0, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(0, 0, 1, 0)
             const startEvents = [createMockDragEvent(100, 100)]
             const currentEvents = [createMockDragEvent(150, 150)]
 
@@ -175,7 +190,7 @@ describe('dragMethods', () => {
         })
 
         test('应该支持只启用移动功能', () => {
-            const initialPose: Pose = { left: 50, top: 60, scale: 1.5, rotateDeg: 30 }
+            const initialPose = createMockPose(50, 60, 1.5, 30)
             const startEvents = [createMockDragEvent(100, 100)]
             const currentEvents = [createMockDragEvent(150, 120)] // 移动了 50, 20
 
@@ -201,7 +216,7 @@ describe('dragMethods', () => {
         })
 
         test('应该支持只启用缩放功能', () => {
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             // 两指缩放手势
             const startEvents = [
@@ -237,7 +252,7 @@ describe('dragMethods', () => {
         })
 
         test('应该支持只启用旋转功能', () => {
-            const initialPose: Pose = { left: 100, top: 100, scale: 2, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 2, 0)
 
             // 两指旋转手势
             const startEvents = [
@@ -273,7 +288,7 @@ describe('dragMethods', () => {
         })
 
                 test('应该支持完全禁用所有功能', () => {
-            const initialPose: Pose = { left: 100, top: 100, scale: 1.5, rotateDeg: 45 }
+            const initialPose = createMockPose(100, 100, 1.5, 45)
 
             const startEvents = [
                 createMockDragEvent(120, 120, 1),
@@ -305,7 +320,7 @@ describe('dragMethods', () => {
         })
 
         test('应该支持单指优先级配置 - 拖拽优先', () => {
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             const startEvents = [createMockDragEvent(150, 150)]
             const currentEvents = [createMockDragEvent(200, 200)] // 移动了 50, 50
@@ -336,7 +351,7 @@ describe('dragMethods', () => {
             testElement.style.left = '100px'
             testElement.style.top = '100px'
 
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             const startEvents = [createMockDragEvent(120, 120)] // 相对元素位置 (20, 20)
             const currentEvents = [createMockDragEvent(140, 140)] // 相对元素位置 (40, 40)，距离增加
@@ -383,7 +398,7 @@ describe('dragMethods', () => {
                 toJSON: () => {}
             } as DOMRect))
 
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             const startEvents = [createMockDragEvent(120, 150)] // 元素右侧
             const currentEvents = [createMockDragEvent(150, 120)] // 移动到元素上方，产生旋转
@@ -411,7 +426,7 @@ describe('dragMethods', () => {
         })
 
         test('应该在单指优先级中跳过禁用的手势', () => {
-            const initialPose: Pose = { left: 100, top: 100, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(100, 100, 1, 0)
 
             const startEvents = [createMockDragEvent(150, 150)]
             const currentEvents = [createMockDragEvent(200, 200)]
@@ -435,6 +450,59 @@ describe('dragMethods', () => {
             expect(testElement.style.top).toBe('150px')
             expect(testElement.style.transform).toContain('scale(1)')
             expect(testElement.style.transform).toContain('rotate(0deg)')
+        })
+
+        test('应该防止样式叠加问题 - 多次调用不会累积变换', () => {
+            // 设置初始元素状态
+            testElement.style.left = '100px'
+            testElement.style.top = '100px'
+            testElement.style.transform = 'rotate(45deg) scale(1.5)'
+
+            // 获取初始姿态（这应该是一个快照，而不是引用）
+            const initialPose = getPoseFromElement(testElement)
+
+            // 第一次拖动
+            const startEvents1 = [createMockDragEvent(150, 150)]
+            const currentEvents1 = [createMockDragEvent(200, 200)] // 移动 50px
+
+            keepTouchesRelative({
+                element: testElement,
+                initialPose,
+                startEvents: startEvents1,
+                currentEvents: currentEvents1
+            })
+
+            const firstResult = {
+                left: testElement.style.left,
+                top: testElement.style.top,
+                transform: testElement.style.transform
+            }
+
+            // 第二次拖动（使用相同的初始姿态）
+            const startEvents2 = [createMockDragEvent(150, 150)]
+            const currentEvents2 = [createMockDragEvent(200, 200)] // 同样移动 50px
+
+            keepTouchesRelative({
+                element: testElement,
+                initialPose, // 使用同样的初始姿态
+                startEvents: startEvents2,
+                currentEvents: currentEvents2
+            })
+
+            const secondResult = {
+                left: testElement.style.left,
+                top: testElement.style.top,
+                transform: testElement.style.transform
+            }
+
+            // 两次调用的结果应该相同，证明没有叠加
+            expect(secondResult.left).toBe(firstResult.left)
+            expect(secondResult.top).toBe(firstResult.top)
+            expect(secondResult.transform).toBe(firstResult.transform)
+
+            // 并且位置应该是预期的（初始位置 + 偏移）
+            expect(testElement.style.left).toBe('150px') // 100 + 50
+            expect(testElement.style.top).toBe('150px')  // 100 + 50
         })
     })
 })

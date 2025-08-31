@@ -17,6 +17,19 @@ function createMockDragEvent(x: number, y: number, identifier: string | number =
     }
 }
 
+// 创建模拟的 Pose 对象
+function createMockPose(left: number = 0, top: number = 0, scale: number = 1, rotateDeg: number = 0): Pose {
+    const style = document.createElement('div').style
+    style.position = 'absolute'
+    style.left = `${left}px`
+    style.top = `${top}px`
+    style.transform = `rotate(${rotateDeg}deg) scale(${scale})`
+
+    const rect = new DOMRect(left, top, 100, 100) // 默认100x100尺寸
+
+    return { rect, style }
+}
+
 describe('触点跟随优化测试', () => {
     let testElement: HTMLElement
 
@@ -50,7 +63,7 @@ describe('触点跟随优化测试', () => {
 
     describe('keepTouchesRelative 优化版本', () => {
         test('应该基于元素边界盒子计算相对位置', () => {
-            const initialPose: Pose = { left: 0, top: 0, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(0, 0, 1, 0)
 
             // 触摸点在元素右下角 (190, 190)
             const startEvents = [createMockDragEvent(190, 190)]
@@ -74,7 +87,7 @@ describe('触点跟随优化测试', () => {
         })
 
         test('应该在双指缩放时保持触点相对位置', () => {
-            const initialPose: Pose = { left: 0, top: 0, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(0, 0, 1, 0)
 
             // 两指在元素上，距离50px
             const startEvents = [
@@ -111,7 +124,7 @@ describe('触点跟随优化测试', () => {
 
     describe('真实场景模拟', () => {
         test('应该模拟真实的缩放手势', () => {
-            const initialPose: Pose = { left: 0, top: 0, scale: 1, rotateDeg: 0 }
+            const initialPose = createMockPose(0, 0, 1, 0)
 
             // 模拟用户在元素的 1/4 和 3/4 位置放置两指
             const startEvents = [
