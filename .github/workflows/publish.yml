@@ -1,0 +1,93 @@
+name: Publish to npm (main/dev)
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取代码
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 安装 Node，并配置 npm registry（用于 npm publish 鉴权）
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+          cache: yarn
+
+      # 使用 Yarn 安装依赖（项目包含 yarn.lock）
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn --version
+          yarn install --frozen-lockfile
+
+      # 计算当前分支对应的 npm dist-tag：main -> latest，dev -> dev
+      - name: Resolve npm dist-tag
+        run: |
+          BRANCH_NAME="${GITHUB_REF##*/}"
+          if [ "$BRANCH_NAME" = "dev" ]; then
+            echo "PUBLISH_TAG=dev" >> "$GITHUB_ENV"
+          else
+            echo "PUBLISH_TAG=latest" >> "$GITHUB_ENV"
+          fi
+
+      # 读取 package.json 的 name 与 version，并检查该版本是否已发布
+      # 已发布则跳过后续发布步骤，避免重复发布导致失败
+      - name: Check if version already published
+        id: version
+        shell: bash
+        run: |
+          PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+          echo "Package: $PKG_NAME"
+          echo "Version: $VERSION"
+          if npm view "$PKG_NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "Version $VERSION already exists on npm, skip publishing."
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "Version $VERSION not found on npm, will publish."
+          fi
+
+      # 可选：预先运行单元测试与构建，提前暴露错误
+      # 注意：npm publish 会触发 prepublishOnly（其中也会执行 test & build）
+      - name: Run tests and build (optional precheck)
+        if: steps.version.outputs.should_publish == 'true'
+        run: |
+          yarn test
+          yarn build
+
+      # 发布到 npm。main 使用 latest tag，dev 使用 dev tag。
+      # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）。
+      - name: Publish to npm
+        if: steps.version.outputs.should_publish == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # 使用 npm publish 以触发 prepublishOnly（包含测试与构建），并指定 tag 与访问级别
+          npm publish --tag "$PUBLISH_TAG" --access public
+
+      # 无论是否发布成功，只要是 dev 分支，都确保 dist-tag=dev 指向当前 version
+      - name: Ensure dev dist-tag
+        if: env.PUBLISH_TAG == 'dev'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
+          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+          echo "Ensure dist-tag: dev -> $VERSION"
+          # 若版本已存在，也可重复设置 tag；若已指向则不变
+          npm dist-tag add "$PKG_NAME@$VERSION" dev || true
+          npm dist-tag ls "$PKG_NAME"
