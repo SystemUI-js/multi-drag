@@ -1,11 +1,13 @@
 {
-  "name": "multi-drag",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@system-ui-js/multi-drag",
+
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc --project tsconfig.build.json",
+    "build:lib": "vite build --mode lib",
+    "build:types": "tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "lint": "tslint --project tsconfig.json",
     "lint:fix": "tslint --project tsconfig.json --fix",
@@ -15,7 +17,10 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:basic": "playwright test tests/e2e/multi-touch.spec.ts --project=chromium",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "prepublishOnly": "npm run test && npm run build",
+    "publish:npm": "npm publish",
+    "release": "npm run prepublishOnly && npm run publish:npm"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
@@ -33,5 +38,14 @@
   },
   "dependencies": {
     "mathjs": "^14.6.0"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ]
 }

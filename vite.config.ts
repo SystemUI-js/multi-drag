@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
+import { resolve } from 'path'
 
 // Custom plugin to move scripts to body
 const moveScriptsToBody = () => {
@@ -28,19 +29,61 @@ const moveScriptsToBody = () => {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: '/multi-drag/',
-  plugins: [
-    checker({
-      typescript: true,
-      overlay: {
-        initialIsOpen: false,
-      },
-    }),
-    moveScriptsToBody(),
-  ],
-  server: {
-    host: true, // 允许局域网访问
-    port: 5173, // 可选：指定端口
-  },
+export default defineConfig(({ mode }) => {
+  const isLib = mode === 'lib'
+
+  const baseConfig = {
+    plugins: [
+      checker({
+        typescript: true,
+        overlay: {
+          initialIsOpen: false,
+        },
+      }),
+    ],
+    server: {
+      host: true, // 允许局域网访问
+      port: 5173, // 可选：指定端口
+    },
+  }
+
+  if (isLib) {
+    // 库模式配置
+    return {
+      ...baseConfig,
+      build: {
+        lib: {
+          // 入口文件路径
+          entry: resolve(__dirname, 'src/index.ts'),
+          // 库名称，在UMD模式下会作为全局变量名
+          name: 'MultiDrag',
+          // 输出文件名
+          fileName: (format) => `index.${format === 'es' ? 'esm.' : ''}js`
+        },
+        rollupOptions: {
+          // 确保外部化处理不想打包进库的依赖
+          external: ['mathjs'],
+          output: {
+            // 在 UMD 构建模式下为外部化的依赖提供全局变量
+            globals: {
+              mathjs: 'mathjs'
+            }
+          }
+        },
+        sourcemap: true,
+        // 生成单独的CSS文件
+        cssCodeSplit: false
+      }
+    }
+  }
+
+  // 开发模式配置
+  return {
+    ...baseConfig,
+    base: '/multi-drag/',
+    plugins: [
+      ...baseConfig.plugins,
+      moveScriptsToBody(),
+    ]
+  }
 })
