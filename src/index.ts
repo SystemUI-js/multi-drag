@@ -1,5 +1,5 @@
 // 主要拖拽功能导出
-export { Drag, type DragOptions } from './drag'
+export { Drag, type DragOptions, type DragStartPayload } from './drag'
 export { dragManager, DragManager, type DragEvent } from './dragManager'
 export {
   makeDraggable,

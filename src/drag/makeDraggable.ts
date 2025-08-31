@@ -1,5 +1,5 @@
-import { Drag, type DragOptions } from './index'
-import { type Pose, getPoseFromElement, applyPoseToElement } from './dragMethods'
+import { Drag, type DragOptions, type DragStartPayload } from './index'
+import { type Pose, getPoseFromElement, applyPoseToElement, keepTouchesRelative } from './dragMethods'
 import type { DragEvent } from '../dragManager'
 
 // Position interface
@@ -44,55 +44,40 @@ export function makeDraggable(
     setPose = defaultSetPose
   } = options
 
-  // Store the initial pose when drag starts
-  let initialPose: Pose
-  let startDragPosition: Position
-
   const dragOptions: DragOptions = {
     onDragStart: (element: HTMLElement, events: DragEvent[]) => {
       const event = events[0]
-      // 获取元素初始位姿（Pose）
-      initialPose = getPose(element)
-      // Store the starting drag coordinates
-      startDragPosition = { x: event.clientX, y: event.clientY }
-
+      const initialPose = getPose(element)
       // Ensure the element has position absolute or relative for dragging
       const computedStyle = window.getComputedStyle(element)
       if (computedStyle.position === 'static') {
         element.style.position = 'relative'
       }
+      // 返回 payload：包含 initPose 与 startEvents
+      const payload: DragStartPayload<Pose> = { initialPose, startEvents: events }
+      return payload
     },
 
-    onDragMove: (element: HTMLElement, events: DragEvent[]) => {
-      const event = events[0]
-      // Calculate the relative movement from the start position
-      const deltaX = event.clientX - startDragPosition.x
-      const deltaY = event.clientY - startDragPosition.y
-
-      // 基于初始 Pose 计算新的 left/top
-      const initialLeft = parseFloat(initialPose.style.left) || 0
-      const initialTop = parseFloat(initialPose.style.top) || 0
-
-      // 生成新的样式快照，保留原 transform 等关键属性
-      const newStyle = document.createElement('div').style
-      newStyle.left = `${initialLeft + deltaX}px`
-      newStyle.top = `${initialTop + deltaY}px`
-      if (typeof initialPose.style.transform === 'string' && initialPose.style.transform.length > 0) {
-        newStyle.transform = initialPose.style.transform
-      }
-      if (typeof initialPose.style.position === 'string' && initialPose.style.position.length > 0) {
-        newStyle.position = initialPose.style.position
-      } else {
-        newStyle.position = 'absolute'
-      }
-
-      const newPose: Pose = {
-        rect: initialPose.rect,
-        style: newStyle
-      }
-
-      // 应用新的位姿
-      setPose(element, newPose)
+    onDragMove: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload<Pose>) => {
+      // 使用 keepTouchesRelative 仅启用移动，禁用缩放与旋转
+      keepTouchesRelative(
+        {
+          element,
+          initialPose: startPayload?.initialPose ?? getPose(element),
+          startEvents: startPayload?.startEvents ?? [],
+          currentEvents: events
+        },
+        {
+          enableMove: true,
+          enableScale: false,
+          enableRotate: false,
+          transformOrigin: 'center center'
+        },
+        {
+          getPose,
+          setPose: (el, newPose) => setPose(el, newPose)
+        }
+      )
     },
 
     onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
