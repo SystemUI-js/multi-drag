@@ -9,6 +9,16 @@ export {
   type MakeDraggableOptions
 } from './drag/makeDraggable'
 
+export {
+  makeScalable,
+  type MakeScalableOptions
+} from './drag/makeScalable'
+
+export {
+  makeRotatable,
+  type MakeRotatableOptions
+} from './drag/makeRotatable'
+
 // 拖拽方法和工具函数导出
 export {
   getPoseFromElement,
