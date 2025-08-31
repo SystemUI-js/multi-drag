@@ -22,7 +22,8 @@ export class MatrixTransforms {
 
     if (transform && transform !== 'none') {
       // 尝试解析matrix格式
-      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      // 使用更具体、无回溯风险的正则（字符类与量词受限）
+      const matrixMatch = /^(?:matrix)\(([-0-9eE.,\s]+)\)$/.exec(transform)
       if (matrixMatch) {
         const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
         const [a, b] = values
@@ -31,8 +32,8 @@ export class MatrixTransforms {
         rotateDeg = (rotateRad * 180) / Math.PI
       } else {
         // 尝试解析rotate和scale函数格式
-        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
-        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+        const rotateMatch = /rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/.exec(transform)
+        const scaleMatch = /scale\((-?(?:\d+)(?:\.\d+)?)\)/.exec(transform)
 
         if (rotateMatch) {
           rotateDeg = parseFloat(rotateMatch[1])
@@ -74,7 +75,7 @@ export class MatrixTransforms {
 
       if (transform && transform !== 'none') {
         // 尝试解析matrix格式
-        const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+        const matrixMatch = /^(?:matrix)\(([-0-9eE.,\s]+)\)$/.exec(transform)
         if (matrixMatch) {
           const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
           const [a, b] = values
@@ -83,8 +84,8 @@ export class MatrixTransforms {
           rotateDeg = (rotateRad * 180) / Math.PI
         } else {
           // 尝试解析rotate和scale函数格式
-          const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
-          const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+          const rotateMatch = /rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/.exec(transform)
+          const scaleMatch = /scale\((-?(?:\d+)(?:\.\d+)?)\)/.exec(transform)
 
           if (rotateMatch) {
             rotateDeg = parseFloat(rotateMatch[1])
@@ -139,7 +140,7 @@ export class MatrixTransforms {
 
     if (transform && transform !== 'none') {
       // 尝试解析matrix格式
-      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      const matrixMatch = /^(?:matrix)\(([-0-9eE.,\s]+)\)$/.exec(transform)
       if (matrixMatch) {
         const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
         const [a, b] = values
@@ -148,8 +149,8 @@ export class MatrixTransforms {
         rotateDeg = (rotateRad * 180) / Math.PI
       } else {
         // 尝试解析rotate和scale函数格式
-        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
-        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+        const rotateMatch = /rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/.exec(transform)
+        const scaleMatch = /scale\((-?(?:\d+)(?:\.\d+)?)\)/.exec(transform)
 
         if (rotateMatch) {
           rotateDeg = parseFloat(rotateMatch[1])
@@ -211,7 +212,7 @@ export class MatrixTransforms {
 
     if (transform && transform !== 'none') {
       // 尝试解析matrix格式
-      const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+      const matrixMatch = /^(?:matrix)\(([-0-9eE.,\s]+)\)$/.exec(transform)
       if (matrixMatch) {
         const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
         const [a, b] = values
@@ -220,8 +221,8 @@ export class MatrixTransforms {
         rotateDeg = (rotateRad * 180) / Math.PI
       } else {
         // 尝试解析rotate和scale函数格式
-        const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
-        const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+        const rotateMatch = /rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/.exec(transform)
+        const scaleMatch = /scale\((-?(?:\d+)(?:\.\d+)?)\)/.exec(transform)
 
         if (rotateMatch) {
           rotateDeg = parseFloat(rotateMatch[1])
@@ -269,7 +270,7 @@ export class MatrixTransforms {
 
       if (transform && transform !== 'none') {
         // 尝试解析matrix格式
-        const matrixMatch = transform.match(/^matrix\(([^)]+)\)$/)
+        const matrixMatch = /^(?:matrix)\(([-0-9eE.,\s]+)\)$/.exec(transform)
         if (matrixMatch) {
           const values = matrixMatch[1].split(',').map(v => parseFloat(v.trim()))
           const [a, b] = values
@@ -278,8 +279,8 @@ export class MatrixTransforms {
           rotateDeg = (rotateRad * 180) / Math.PI
         } else {
           // 尝试解析rotate和scale函数格式
-          const rotateMatch = transform.match(/rotate\(([-0-9.]+)deg\)/)
-          const scaleMatch = transform.match(/scale\(([-0-9.]+)\)/)
+          const rotateMatch = /rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/.exec(transform)
+          const scaleMatch = /scale\((-?(?:\d+)(?:\.\d+)?)\)/.exec(transform)
 
           if (rotateMatch) {
             rotateDeg = parseFloat(rotateMatch[1])

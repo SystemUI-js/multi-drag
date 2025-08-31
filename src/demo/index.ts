@@ -1,6 +1,5 @@
 import '../style.css'
-import { Drag } from '../drag'
-import { keepTouchesRelative, getPoseFromElement, type GestureParams } from '../drag/dragMethods'
+import { Drag, keepTouchesRelative, getPoseFromElement, type GestureParams, type DragEvent } from '..'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -25,8 +24,7 @@ const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 
 // Item1: 拖拽+缩放（禁用旋转）
-let item1StartEvents: any = null
-let item1InitialPose: any = null
+let item1StartEvents: DragEvent[] | null = null
 
 new Drag(item1, {
     onDragStart: (element, events) => {
@@ -34,19 +32,18 @@ new Drag(item1, {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        // 保存初始姿态和起始事件
-        item1InitialPose = getPoseFromElement(element)
+        // 保存起始事件，并返回初始 Pose（Drag 会保存并在后续回调传回）
         item1StartEvents = events
-
         console.log(`单指拖拽优先开始 - Item1，触点数: ${events.length}`)
+        return getPoseFromElement(element)
     },
 
-    onDragMove: (element, events) => {
-        if (!item1StartEvents || !item1InitialPose) return
+    onDragMove: (element, events, pose) => {
+        if (!item1StartEvents || !pose) return
 
         const params: GestureParams = {
             element,
-            initialPose: item1InitialPose,
+            initialPose: pose,
             startEvents: item1StartEvents,
             currentEvents: events
         }
@@ -60,7 +57,7 @@ new Drag(item1, {
         })
     },
 
-    onDragEnd: (element, _events) => {
+    onDragEnd: (element, _events, _pose) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
         console.log(`单指拖拽优先结束 - Item1`)
@@ -68,26 +65,24 @@ new Drag(item1, {
 })
 
 // Item2: 单指缩放优先，双指旋转
-let item2StartEvents: any = null
-let item2InitialPose: any = null
+let item2StartEvents: DragEvent[] | null = null
 
 new Drag(item2, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        item2InitialPose = getPoseFromElement(element)
         item2StartEvents = events
-
         console.log(`单指缩放优先开始 - Item2，触点数: ${events.length}`)
+        return getPoseFromElement(element)
     },
 
-    onDragMove: (element, events) => {
-        if (!item2StartEvents || !item2InitialPose) return
+    onDragMove: (element, events, pose) => {
+        if (!item2StartEvents || !pose) return
 
         const params: GestureParams = {
             element,
-            initialPose: item2InitialPose,
+            initialPose: pose,
             startEvents: item2StartEvents,
             currentEvents: events
         }
@@ -101,7 +96,7 @@ new Drag(item2, {
         })
     },
 
-    onDragEnd: (element, _events) => {
+    onDragEnd: (element, _events, _pose) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
         console.log(`单指缩放优先结束 - Item2`)
@@ -109,26 +104,24 @@ new Drag(item2, {
 })
 
 // Item3: 单指旋转优先，双指拖拽
-let item3StartEvents: any = null
-let item3InitialPose: any = null
+let item3StartEvents: DragEvent[] | null = null
 
 new Drag(item3, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        item3InitialPose = getPoseFromElement(element)
         item3StartEvents = events
-
         console.log(`单指旋转优先开始 - Item3，触点数: ${events.length}`)
+        return getPoseFromElement(element)
     },
 
-    onDragMove: (element, events) => {
-        if (!item3StartEvents || !item3InitialPose) return
+    onDragMove: (element, events, pose) => {
+        if (!item3StartEvents || !pose) return
 
         const params: GestureParams = {
             element,
-            initialPose: item3InitialPose,
+            initialPose: pose,
             startEvents: item3StartEvents,
             currentEvents: events
         }
@@ -142,7 +135,7 @@ new Drag(item3, {
         })
     },
 
-    onDragEnd: (element) => {
+    onDragEnd: (element, _events, _pose) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
         console.log(`单指旋转优先结束 - Item3`)

@@ -105,52 +105,49 @@ class DragManager {
 
   // Handle start events (mouse down or touch start)
   private handleStart(event: MouseEvent | TouchEvent): void {
-    if (event instanceof MouseEvent) {
-      // Handle mouse event (single)
-      const dragEvent = this.createMouseDragEvent(event)
+    if (event instanceof MouseEvent) this.handleStartMouse(event)
+    else if (event instanceof TouchEvent) this.handleStartTouch(event)
+    if (this.activeDrags.size > 0) event.preventDefault()
+  }
+
+  // 将鼠标开始逻辑拆分，降低复杂度
+  private handleStartMouse(event: MouseEvent): void {
+    const dragEvent = this.createMouseDragEvent(event)
+    const targetElement = dragEvent.target as HTMLElement | null
+    for (const dragInstance of this.dragInstances) {
+      if (targetElement && dragInstance.getElement().contains(targetElement)) {
+        const didStart = dragInstance.handleStart([dragEvent])
+        if (didStart) {
+          this.activeDrags.set(dragEvent.identifier, dragInstance)
+          this.draggedElements.add(dragInstance.getElement())
+        }
+        break
+      }
+    }
+  }
+
+  // 将触摸开始逻辑拆分，降低复杂度
+  private handleStartTouch(event: TouchEvent): void {
+    const dragEvents = this.createTouchDragEvents(event)
+    const group = new Map<import('../drag').Drag, DragEvent[]>()
+    for (const dragEvent of dragEvents) {
       const targetElement = dragEvent.target as HTMLElement | null
+      if (!targetElement) continue
       for (const dragInstance of this.dragInstances) {
-        if (targetElement && dragInstance.getElement().contains(targetElement)) {
-          const didStart = dragInstance.handleStart([dragEvent])
-          if (didStart) {
-            this.activeDrags.set(dragEvent.identifier, dragInstance)
-            this.draggedElements.add(dragInstance.getElement())
-          }
+        if (dragInstance.getElement().contains(targetElement)) {
+          const list = group.get(dragInstance) || []
+          list.push(dragEvent)
+          group.set(dragInstance, list)
           break
         }
       }
-    } else if (event instanceof TouchEvent) {
-      // Handle touch event - support multiple touches grouped by element/dragInstance
-      const dragEvents = this.createTouchDragEvents(event)
-      // Group by drag instance
-      const group = new Map<import('../drag').Drag, DragEvent[]>()
-      for (const dragEvent of dragEvents) {
-        const targetElement = dragEvent.target as HTMLElement | null
-        if (!targetElement) continue
-        for (const dragInstance of this.dragInstances) {
-          if (dragInstance.getElement().contains(targetElement)) {
-            const list = group.get(dragInstance) || []
-            list.push(dragEvent)
-            group.set(dragInstance, list)
-            break
-          }
-        }
-      }
-      // Call starts per instance
-      for (const [dragInstance, eventsForInstance] of group.entries()) {
-        const didStart = dragInstance.handleStart(eventsForInstance)
-        if (didStart) {
-          for (const ev of eventsForInstance) {
-            this.activeDrags.set(ev.identifier, dragInstance)
-          }
-          this.draggedElements.add(dragInstance.getElement())
-        }
-      }
     }
-
-    // Prevent default if any drag started
-    if (this.activeDrags.size > 0) {
-      event.preventDefault()
+    for (const [dragInstance, eventsForInstance] of group.entries()) {
+      const didStart = dragInstance.handleStart(eventsForInstance)
+      if (didStart) {
+        for (const ev of eventsForInstance) this.activeDrags.set(ev.identifier, dragInstance)
+        this.draggedElements.add(dragInstance.getElement())
+      }
     }
   }
 
@@ -211,50 +208,42 @@ class DragManager {
 
   // Handle end events (mouse up or touch end)
   private handleEnd(event: MouseEvent | TouchEvent): void {
-    if (event instanceof MouseEvent) {
-      const dragEvent = this.createMouseDragEvent(event)
-      const dragInstance = this.activeDrags.get(dragEvent.identifier)
-      if (dragInstance) {
-        dragInstance.handleEnd([dragEvent])
-        this.activeDrags.delete(dragEvent.identifier)
-        // If no more identifiers map to this instance, clear dragged element lock
-        const stillActiveForInstance = Array.from(this.activeDrags.values()).some(inst => inst === dragInstance)
-        if (!stillActiveForInstance) {
-          this.draggedElements.delete(dragInstance.getElement())
-        }
-      }
-    } else if (event instanceof TouchEvent) {
-      // Handle touch event - for touchend, we need to check which touches ended
-      // TouchEvent.changedTouches contains the touches that ended
-      const endedTouches = Array.from(event.changedTouches).map(touch => ({
-        identifier: touch.identifier,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        target: touch.target || null,
-        originalEvent: event,
-        type: 'touch' as const
-      }))
+    if (event instanceof MouseEvent) this.handleEndMouse(event)
+    else if (event instanceof TouchEvent) this.handleEndTouch(event)
+  }
 
-      // Group by active drag instance
-      const group = new Map<import('../drag').Drag, DragEvent[]>()
-      for (const dragEvent of endedTouches) {
-        const dragInstance = this.activeDrags.get(dragEvent.identifier)
-        if (dragInstance) {
-          const list = group.get(dragInstance) || []
-          list.push(dragEvent)
-          group.set(dragInstance, list)
-        }
-      }
-      for (const [dragInstance, eventsForInstance] of group.entries()) {
-        dragInstance.handleEnd(eventsForInstance)
-        for (const ev of eventsForInstance) {
-          this.activeDrags.delete(ev.identifier)
-        }
-        const stillActiveForInstance = Array.from(this.activeDrags.values()).some(inst => inst === dragInstance)
-        if (!stillActiveForInstance) {
-          this.draggedElements.delete(dragInstance.getElement())
-        }
-      }
+  private handleEndMouse(event: MouseEvent): void {
+    const dragEvent = this.createMouseDragEvent(event)
+    const dragInstance = this.activeDrags.get(dragEvent.identifier)
+    if (!dragInstance) return
+    dragInstance.handleEnd([dragEvent])
+    this.activeDrags.delete(dragEvent.identifier)
+    const stillActiveForInstance = Array.from(this.activeDrags.values()).some(inst => inst === dragInstance)
+    if (!stillActiveForInstance) this.draggedElements.delete(dragInstance.getElement())
+  }
+
+  private handleEndTouch(event: TouchEvent): void {
+    const endedTouches = Array.from(event.changedTouches).map(touch => ({
+      identifier: touch.identifier,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      target: touch.target || null,
+      originalEvent: event,
+      type: 'touch' as const
+    }))
+    const group = new Map<import('../drag').Drag, DragEvent[]>()
+    for (const dragEvent of endedTouches) {
+      const dragInstance = this.activeDrags.get(dragEvent.identifier)
+      if (!dragInstance) continue
+      const list = group.get(dragInstance) || []
+      list.push(dragEvent)
+      group.set(dragInstance, list)
+    }
+    for (const [dragInstance, eventsForInstance] of group.entries()) {
+      dragInstance.handleEnd(eventsForInstance)
+      for (const ev of eventsForInstance) this.activeDrags.delete(ev.identifier)
+      const stillActiveForInstance = Array.from(this.activeDrags.values()).some(inst => inst === dragInstance)
+      if (!stillActiveForInstance) this.draggedElements.delete(dragInstance.getElement())
     }
   }
 

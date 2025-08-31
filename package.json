@@ -1,6 +1,5 @@
 {
   "name": "@system-ui-js/multi-drag",
-
   "version": "0.0.1",
   "type": "module",
   "scripts": {
@@ -9,8 +8,8 @@
     "build:lib": "vite build --mode lib",
     "build:types": "tsc --project tsconfig.build.json",
     "preview": "vite preview",
-    "lint": "tslint --project tsconfig.json",
-    "lint:fix": "tslint --project tsconfig.json --fix",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
@@ -26,6 +25,10 @@
     "@playwright/test": "^1.54.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
+    "eslint-plugin-sonarjs": "^3.0.5",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "playwright": "^1.54.2",
@@ -51,5 +54,6 @@
     "package.json",
     "LICENSE",
     "assets"
-  ]
+  ],
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

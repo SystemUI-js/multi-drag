@@ -1,4 +1,5 @@
 import { evaluate, matrix, multiply, subtract, add, norm, cos, sin, pi } from 'mathjs'
+import type { Matrix } from 'mathjs'
 
 /**
  * 数学工具函数，使用 math.js 进行复杂的数学计算
@@ -37,10 +38,10 @@ export class MathUtils {
    * @param point 2D点 [x, y]
    * @param transformMatrix 3x3变换矩阵
    */
-  static transformPoint(point: [number, number], transformMatrix: any) {
-    const homogeneousPoint = matrix([point[0], point[1], 1])
-    const result = multiply(transformMatrix, homogeneousPoint)
-    return [result.get([0]), result.get([1])] as [number, number]
+  static transformPoint(point: [number, number], transformMatrix: Matrix) {
+    const homogeneousPoint = matrix([point[0], point[1], 1]) as Matrix
+    const result = multiply(transformMatrix, homogeneousPoint) as Matrix
+    return [result.get([0]) as number, result.get([1]) as number]
   }
 
   /**
@@ -68,12 +69,11 @@ export class MathUtils {
    * @param expression 数学表达式字符串
    * @param scope 变量作用域
    */
-  static evaluate(expression: string, scope?: Record<string, any>): any {
+  static evaluate<T = number>(expression: string, scope?: Record<string, unknown>): T {
     if (scope) {
-      return evaluate(expression, scope)
-    } else {
-      return evaluate(expression)
+      return evaluate(expression, scope) as T
     }
+    return evaluate(expression) as T
   }
 
   /**

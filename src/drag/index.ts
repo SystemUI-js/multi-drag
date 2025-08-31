@@ -1,15 +1,26 @@
 import { dragManager, type DragEvent } from '../dragManager'
+import type { Pose } from './dragMethods'
+
+export interface DragStartPayload<PoseType = Pose> {
+  initialPose: PoseType
+  startEvents: DragEvent[]
+}
 
 export interface DragOptions {
-  onDragStart?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragMove?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragEnd?: (element: HTMLElement, events: DragEvent[]) => void
+  // onDragStart 返回携带 initPose 与 startEvents 的 payload
+  onDragStart?: (element: HTMLElement, events: DragEvent[]) => DragStartPayload | void
+  // onDragMove 接收 onDragStart 的返回 payload
+  onDragMove?: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload) => void
+  // onDragEnd 同样接收 payload
+  onDragEnd?: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload) => void
 }
 
 export class Drag {
   private element: HTMLElement
   private options: DragOptions
   private isDragging: boolean = false
+  // onDragStart 可返回并保存的 payload
+  private startPayload: DragStartPayload | undefined
 
   constructor(element: HTMLElement, options: DragOptions = {}) {
     this.element = element
@@ -32,9 +43,13 @@ export class Drag {
     // Allow multiple touches on same element; mark dragging on first batch
     this.isDragging = true
 
-    // Call user-defined onDragStart callback
+    // 重置 startPayload
+    this.startPayload = undefined
+
+    // Call user-defined onDragStart callback 并接收可选 payload
     if (this.options.onDragStart) {
-      this.options.onDragStart(this.element, events)
+      const payload = this.options.onDragStart(this.element, events)
+      if (payload) this.startPayload = payload
     }
 
     return true
@@ -46,7 +61,7 @@ export class Drag {
 
     // Call user-defined onDragMove callback
     if (this.options.onDragMove) {
-      this.options.onDragMove(this.element, events)
+      this.options.onDragMove(this.element, events, this.startPayload)
     }
   }
 
@@ -60,8 +75,11 @@ export class Drag {
 
     // Call user-defined onDragEnd callback
     if (this.options.onDragEnd) {
-      this.options.onDragEnd(this.element, events)
+      this.options.onDragEnd(this.element, events, this.startPayload)
     }
+
+    // 结束后清理保存的 payload
+    this.startPayload = undefined
   }
 
   // Getter for the element

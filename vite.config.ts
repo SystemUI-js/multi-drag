@@ -35,7 +35,8 @@ export default defineConfig(({ mode }) => {
   const baseConfig = {
     plugins: [
       checker({
-        typescript: true,
+        // 使用构建专用的 tsconfig，避免检查测试与 demo 文件
+        typescript: { tsconfigPath: resolve(__dirname, 'tsconfig.build.json') },
         overlay: {
           initialIsOpen: false,
         },

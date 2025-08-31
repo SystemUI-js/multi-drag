@@ -1,4 +1,5 @@
-import { Drag, type DragOptions } from './index'
+import { Drag, type DragOptions, type DragStartPayload } from './index'
+import { type Pose, getPoseFromElement, applyPoseToElement, keepTouchesRelative } from './dragMethods'
 import type { DragEvent } from '../dragManager'
 
 // Position interface
@@ -7,35 +8,31 @@ export interface Position {
   y: number
 }
 
-// Function types for getting and setting position
+// Function types for getting and setting position (兼容保留)
 export type GetPositionFunction = (element: HTMLElement) => Position
 export type SetPositionFunction = (element: HTMLElement, position: Position) => void
 
+// 新的位姿（Pose）类型函数
+export type GetPoseFunction = (element: HTMLElement) => Pose
+export type SetPoseFunction = (element: HTMLElement, pose: Pose) => void
+
 // Options for makeDraggable function
 export interface MakeDraggableOptions {
-  getPosition?: GetPositionFunction
-  setPosition?: SetPositionFunction
+  // 使用 Pose 的新配置
+  getPose?: GetPoseFunction
+  setPose?: SetPoseFunction
 }
 
-// Default getPosition function - gets position from element's style
-const defaultGetPosition: GetPositionFunction = (element: HTMLElement): Position => {
-  const computedStyle = window.getComputedStyle(element)
-  const left = parseFloat(computedStyle.left) || 0
-  const top = parseFloat(computedStyle.top) || 0
-
-  return { x: left, y: top }
-}
-
-// Default setPosition function - sets position to element's style
-const defaultSetPosition: SetPositionFunction = (element: HTMLElement, position: Position): void => {
-  element.style.left = `${position.x}px`
-  element.style.top = `${position.y}px`
+// 默认的 Pose 适配：读取/设置位姿
+const defaultGetPose: GetPoseFunction = (element: HTMLElement): Pose => getPoseFromElement(element)
+const defaultSetPose: SetPoseFunction = (element: HTMLElement, pose: Pose): void => {
+  applyPoseToElement(element, pose)
 }
 
 /**
  * Makes an element draggable with position management
  * @param element - The HTML element to make draggable
- * @param options - Optional configuration with custom getPosition and setPosition functions
+ * @param options - Optional configuration with custom getPose and setPose functions (基于 Pose)
  * @returns Drag instance for further control
  */
 export function makeDraggable(
@@ -43,43 +40,44 @@ export function makeDraggable(
   options: MakeDraggableOptions = {}
 ): Drag {
   const {
-    getPosition = defaultGetPosition,
-    setPosition = defaultSetPosition
+    getPose = defaultGetPose,
+    setPose = defaultSetPose
   } = options
-
-  // Store the initial position when drag starts
-  let initialPosition: Position
-  let startDragPosition: Position
 
   const dragOptions: DragOptions = {
     onDragStart: (element: HTMLElement, events: DragEvent[]) => {
       const event = events[0]
-      // Get the current position of the element
-      initialPosition = getPosition(element)
-      // Store the starting drag coordinates
-      startDragPosition = { x: event.clientX, y: event.clientY }
-
+      const initialPose = getPose(element)
       // Ensure the element has position absolute or relative for dragging
       const computedStyle = window.getComputedStyle(element)
       if (computedStyle.position === 'static') {
         element.style.position = 'relative'
       }
+      // 返回 payload：包含 initPose 与 startEvents
+      const payload: DragStartPayload<Pose> = { initialPose, startEvents: events }
+      return payload
     },
 
-    onDragMove: (element: HTMLElement, events: DragEvent[]) => {
-      const event = events[0]
-      // Calculate the relative movement from the start position
-      const deltaX = event.clientX - startDragPosition.x
-      const deltaY = event.clientY - startDragPosition.y
-
-      // Calculate new position based on initial position + delta
-      const newPosition: Position = {
-        x: initialPosition.x + deltaX,
-        y: initialPosition.y + deltaY
-      }
-
-      // Set the new position
-      setPosition(element, newPosition)
+    onDragMove: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload<Pose>) => {
+      // 使用 keepTouchesRelative 仅启用移动，禁用缩放与旋转
+      keepTouchesRelative(
+        {
+          element,
+          initialPose: startPayload?.initialPose ?? getPose(element),
+          startEvents: startPayload?.startEvents ?? [],
+          currentEvents: events
+        },
+        {
+          enableMove: true,
+          enableScale: false,
+          enableRotate: false,
+          transformOrigin: 'center center'
+        },
+        {
+          getPose,
+          setPose: (el, newPose) => setPose(el, newPose)
+        }
+      )
     },
 
     onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
