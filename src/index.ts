@@ -19,6 +19,11 @@ export {
   type MakeRotatableOptions
 } from './drag/makeRotatable'
 
+export {
+  makeMagicDrag,
+  type MakeMagicDragOptions
+} from './drag/makeMagicDrag'
+
 // 拖拽方法和工具函数导出
 export {
   getPoseFromElement,
