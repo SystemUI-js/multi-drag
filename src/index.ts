@@ -18,7 +18,8 @@ export {
   type Point,
   type GestureParams,
   type ApplyPoseOptions,
-  type KeepTouchesRelativeOptions
+  type KeepTouchesRelativeOptions,
+  type KeepTouchesRelativeAdapters
 } from './drag/dragMethods'
 
 // 工具函数导出

@@ -29,16 +29,33 @@ export interface KeepTouchesRelativeOptions extends ApplyPoseOptions {
   singleFingerPriority?: ('scale' | 'rotate' | 'drag')[]  // 单指时的手势优先级列表，默认 ['drag']
 }
 
+// 允许外部自定义获取与设置位姿的适配器
+export interface KeepTouchesRelativeAdapters {
+  // 自定义获取位姿（默认使用 getPoseFromElement）
+  getPose?: (element: HTMLElement) => Pose
+  // 自定义设置位姿（默认使用 applyPoseToElement）
+  setPose?: (element: HTMLElement, pose: Pose, options?: ApplyPoseOptions) => void
+}
+
 export function getPoseFromElement(element: HTMLElement): Pose {
   // 获取元素的边界矩形信息
   const rectData = element.getBoundingClientRect()
   // 确保返回的是DOMRect对象（在测试环境中可能需要转换）
-  const rect = rectData instanceof DOMRect ? rectData : new DOMRect(
-    (rectData as any).x || (rectData as any).left || 0,
-    (rectData as any).y || (rectData as any).top || 0,
-    (rectData as any).width || 0,
-    (rectData as any).height || 0
-  )
+  type RectLike = { x?: number; y?: number; left?: number; top?: number; width?: number; height?: number }
+  const rect: DOMRect = rectData instanceof DOMRect
+    ? rectData
+    : (() => {
+        const isRectLike = (v: unknown): v is RectLike => typeof v === 'object' && v !== null
+        const rUnknown = rectData as unknown
+        if (isRectLike(rUnknown)) {
+          const x = (typeof rUnknown.x === 'number' ? rUnknown.x : rUnknown.left) ?? 0
+          const y = (typeof rUnknown.y === 'number' ? rUnknown.y : rUnknown.top) ?? 0
+          const width = (typeof rUnknown.width === 'number' ? rUnknown.width : 0)
+          const height = (typeof rUnknown.height === 'number' ? rUnknown.height : 0)
+          return new DOMRect(x, y, width, height)
+        }
+        return new DOMRect(0, 0, 0, 0)
+      })()
 
   // 创建样式的快照，而不是引用
   // 这是修复叠加问题的关键：确保initialPose保存的是拖动开始时的状态快照
@@ -118,8 +135,16 @@ function toPoints(events: DragEvent[]): Point[] {
 // - enableRotate: 是否启用旋转功能（默认 true）
 // - enableMove: 是否启用移动功能（默认 true）
 // - singleFingerPriority: 单指时的手势优先级列表（默认 ['drag']）
-export function keepTouchesRelative(params: GestureParams, options?: KeepTouchesRelativeOptions): void {
-  const { element, initialPose, startEvents, currentEvents } = params
+export function keepTouchesRelative(
+  params: GestureParams,
+  options?: KeepTouchesRelativeOptions,
+  adapters?: KeepTouchesRelativeAdapters
+): void {
+  // 解析适配器，提供默认的获取/设置位姿方法
+  const getPose = adapters?.getPose ?? getPoseFromElement
+  const setPose = adapters?.setPose ?? applyPoseToElement
+
+  const { element, initialPose: providedInitialPose, startEvents, currentEvents } = params
 
   // 解析配置选项，设置默认值
   const {
@@ -134,7 +159,10 @@ export function keepTouchesRelative(params: GestureParams, options?: KeepTouches
   const C = toPoints(currentEvents)
   if (!S[0] || !C[0]) return
 
-    // 从initialPose中提取初始变换信息
+  // 若调用方未提供 initialPose，则使用适配器自动获取一次快照
+  const initialPose = providedInitialPose ?? getPose(element)
+
+  // 从 initialPose 中提取初始变换信息
   const initialLeft = parseFloat(initialPose.style.left) || 0
   const initialTop = parseFloat(initialPose.style.top) || 0
 
@@ -260,12 +288,15 @@ export function keepTouchesRelative(params: GestureParams, options?: KeepTouches
   }
 
   // 创建新的Pose对象
+  // 使用适配器的获取方法保证 rect 的来源可被重写（仅取 rect，style 使用上面计算的新样式）
+  const rectFromAdapter = getPose(element).rect
   const newPose: Pose = {
-    rect: element.getBoundingClientRect(), // 使用当前的rect
+    rect: rectFromAdapter,
     style: newStyle
   }
 
-  applyPoseToElement(element, newPose, {
+  // 使用适配器设置位姿，外部可自定义
+  setPose(element, newPose, {
     transformOrigin: applyOptions?.transformOrigin ?? 'center center',
     transition: applyOptions?.transition
   })

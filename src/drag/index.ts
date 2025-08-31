@@ -1,15 +1,22 @@
 import { dragManager, type DragEvent } from '../dragManager'
+import type { Pose } from './dragMethods'
 
 export interface DragOptions {
-  onDragStart?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragMove?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragEnd?: (element: HTMLElement, events: DragEvent[]) => void
+  // onDragStart 允许返回 Pose（可缺省）。
+  // 若返回，则 Drag 会保存该 Pose 并在后续回调中作为第三个参数传回。
+  onDragStart?: (element: HTMLElement, events: DragEvent[]) => Pose | void
+  // onDragMove 增加第三个参数 pose（可能为 undefined），用于传递 onDragStart 返回并保存的 Pose
+  onDragMove?: (element: HTMLElement, events: DragEvent[], pose?: Pose) => void
+  // onDragEnd 同样增加第三个参数 pose（可能为 undefined）
+  onDragEnd?: (element: HTMLElement, events: DragEvent[], pose?: Pose) => void
 }
 
 export class Drag {
   private element: HTMLElement
   private options: DragOptions
   private isDragging: boolean = false
+  // onDragStart 可返回并保存的位姿 Pose
+  private startPose: Pose | undefined
 
   constructor(element: HTMLElement, options: DragOptions = {}) {
     this.element = element
@@ -32,9 +39,13 @@ export class Drag {
     // Allow multiple touches on same element; mark dragging on first batch
     this.isDragging = true
 
-    // Call user-defined onDragStart callback
+    // 重置 startPose
+    this.startPose = undefined
+
+    // Call user-defined onDragStart callback 并接收可选 Pose
     if (this.options.onDragStart) {
-      this.options.onDragStart(this.element, events)
+      const pose = this.options.onDragStart(this.element, events)
+      if (pose) this.startPose = pose
     }
 
     return true
@@ -46,7 +57,7 @@ export class Drag {
 
     // Call user-defined onDragMove callback
     if (this.options.onDragMove) {
-      this.options.onDragMove(this.element, events)
+      this.options.onDragMove(this.element, events, this.startPose)
     }
   }
 
@@ -60,8 +71,11 @@ export class Drag {
 
     // Call user-defined onDragEnd callback
     if (this.options.onDragEnd) {
-      this.options.onDragEnd(this.element, events)
+      this.options.onDragEnd(this.element, events, this.startPose)
     }
+
+    // 结束后清理保存的 Pose
+    this.startPose = undefined
   }
 
   // Getter for the element
