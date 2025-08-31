@@ -46,7 +46,6 @@ export function makeDraggable(
 
   const dragOptions: DragOptions = {
     onDragStart: (element: HTMLElement, events: DragEvent[]) => {
-      const event = events[0]
       const initialPose = getPose(element)
       // Ensure the element has position absolute or relative for dragging
       const computedStyle = window.getComputedStyle(element)
