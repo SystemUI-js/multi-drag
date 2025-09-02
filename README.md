@@ -37,6 +37,9 @@ import {
   Drag,
   dragManager,
   makeDraggable,
+  makeMagicDrag,
+  makeScalable,
+  makeRotatable,
   getPoseFromElement,
   applyPoseToElement,
   keepTouchesRelative,
@@ -51,19 +54,14 @@ import {
 // 让一个元素具备拖拽能力（单指或鼠标）
 const box = document.getElementById('box') as HTMLElement
 
-// 使用 makeDraggable 自动处理位移（left/top）
-const drag = makeDraggable(box, {
-  // 可选：自定义读取当前位置信息
-  getPosition: (el) => ({
-    x: parseFloat(getComputedStyle(el).left) || 0,
-    y: parseFloat(getComputedStyle(el).top) || 0
-  }),
-  // 可选：自定义写入位置的方式
-  setPosition: (el, pos) => {
-    el.style.left = `${pos.x}px`
-    el.style.top = `${pos.y}px`
-  }
-})
+// 最简用法：内部通过 Pose 快照管理位置/变换
+const drag = makeDraggable(box)
+
+// 可选：自定义位姿读取/写入
+// const drag = makeDraggable(box, {
+//   getPose: (el) => getPoseFromElement(el),
+//   setPose: (el, pose) => applyPoseToElement(el, pose)
+// })
 
 // 销毁
 // drag.destroy()
@@ -89,32 +87,61 @@ new Drag(element: HTMLElement, options?: DragOptions)
   - `destroy(): void`：注销当前实例。
 
 ```ts
+interface DragStartPayload<PoseType = Pose> {
+  initialPose: PoseType
+  startEvents: DragEvent[]
+}
+
 interface DragOptions {
-  onDragStart?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragMove?: (element: HTMLElement, events: DragEvent[]) => void
-  onDragEnd?: (element: HTMLElement, events: DragEvent[]) => void
+  onDragStart?: (element: HTMLElement, events: DragEvent[]) => DragStartPayload | void
+  onDragMove?: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload) => void
+  onDragEnd?: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload) => void
 }
 ```
 
-- 说明：`events` 为标准化的指针事件数组，兼容鼠标与触摸，便于多指场景。
+- 说明：`events` 为标准化的指针事件数组，兼容鼠标与触摸，便于多指场景；`startPayload` 为 `onDragStart` 返回的上下文。
+
+参数表（DragOptions）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| onDragStart | (element, events) => DragStartPayload \| void | 拖拽开始回调；可返回初始位姿与起始触点作为上下文 |
+| onDragMove | (element, events, startPayload?) => void | 拖拽过程回调；第三参接收 `onDragStart` 返回的 `payload` |
+| onDragEnd | (element, events, startPayload?) => void | 拖拽结束回调；第三参接收 `onDragStart` 返回的 `payload` |
+
+参数表（DragStartPayload）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| initialPose | Pose | 拖拽开始时的元素位姿快照（防止样式叠加） |
+| startEvents | DragEvent[] | 拖拽开始时的触点列表 |
 
 ### makeDraggable 函数
 
 ```ts
 function makeDraggable(
   element: HTMLElement,
-  options?: {
-    getPosition?: (el: HTMLElement) => { x: number; y: number }
-    setPosition?: (el: HTMLElement, pos: { x: number; y: number }) => void
-  }
+  options?: MakeDraggableOptions
 ): Drag
+
+interface MakeDraggableOptions {
+  getPose?: (el: HTMLElement) => Pose
+  setPose?: (el: HTMLElement, pose: Pose) => void
+}
 ```
 
-- 作用：为元素提供“拖拽即位移”的快捷能力。
+- 作用：为元素提供“拖拽即位移”的快捷能力，内部基于 `Pose` 快照，避免样式叠加。
 - 默认行为：
-  - `getPosition` 默认从 `style.left/top` 读取；
-  - `setPosition` 默认写入到 `style.left/top`；
+  - `getPose` 默认使用 `getPoseFromElement(el)`；
+  - `setPose` 默认使用 `applyPoseToElement(el, pose)`；
   - 若元素 `position` 为 `static`，会自动设置为 `relative` 以便移动。
+
+参数表（MakeDraggableOptions）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| getPose | (el) => Pose | 自定义如何读取元素位姿，用于初始化与后续计算 |
+| setPose | (el, pose) => void | 自定义如何应用新位姿到元素（位置/transform/transition 等） |
 
 ### dragManager 与 DragManager
 
@@ -142,6 +169,17 @@ interface DragEvent {
   - `dragManager.isElementBeingDragged(el: HTMLElement): boolean`
 
 > 一般无需直接调用 `register/unregister`，`new Drag(...)` 会自动注册，`destroy()` 会自动注销。
+
+参数表（DragEvent）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| identifier | string \| number | 指针唯一标识（鼠标为 'mouse'，触摸为 touch.identifier） |
+| clientX | number | 统一后的屏幕 X 坐标 |
+| clientY | number | 统一后的屏幕 Y 坐标 |
+| target | EventTarget \| null | 原始事件目标元素 |
+| originalEvent | MouseEvent \| TouchEvent | 原始事件，用于进阶场景 |
+| type | 'mouse' \| 'touch' | 事件来源类型（调试用） |
 
 ### 拖拽手势方法（dragMethods）
 
@@ -172,6 +210,10 @@ interface KeepTouchesRelativeOptions extends ApplyPoseOptions {
   enableRotate?: boolean
   enableMove?: boolean
   singleFingerPriority?: ('scale' | 'rotate' | 'drag')[]
+}
+interface KeepTouchesRelativeAdapters {
+  getPose?: (element: HTMLElement) => Pose
+  setPose?: (element: HTMLElement, pose: Pose, options?: ApplyPoseOptions) => void
 }
 ```
 
@@ -208,6 +250,71 @@ const drag = new Drag(el, {
 
 > 注意：示例中 `startEvents`/`currentEvents` 的管理策略可按需缓存与传递，只要满足 `GestureParams` 的约定即可。
 
+参数表（GestureParams）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| element | HTMLElement | 要操作的目标元素 |
+| initialPose | Pose | 拖拽开始时的位姿快照 |
+| startEvents | DragEvent[] | 开始时的触点列表，用于相对计算基准 |
+| currentEvents | DragEvent[] | 当前 move 阶段触点列表 |
+
+参数表（KeepTouchesRelativeOptions）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| enableMove | boolean | 是否启用移动，默认 true |
+| enableScale | boolean | 是否启用缩放，默认 true |
+| enableRotate | boolean | 是否启用旋转，默认 true |
+| singleFingerPriority | ('scale' \| 'rotate' \| 'drag')[] | 单指优先级，默认 ['drag'] |
+| transformOrigin | string | 透传到应用姿态时的 transform-origin |
+| transition | string | 透传到应用姿态时的 transition |
+
+参数表（KeepTouchesRelativeAdapters）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| getPose | (el) => Pose | 自定义读取位姿（默认 `getPoseFromElement`） |
+| setPose | (el, pose, options?) => void | 自定义写入位姿（默认 `applyPoseToElement`） |
+
+返回值：`void`
+
+行为说明：
+
+- 单指：按照 `singleFingerPriority` 只执行一个手势（拖拽/缩放/旋转）。
+- 多指：在启用的情况下同时计算移动/缩放/旋转，并合成最终姿态。
+
+---
+
+### 快捷封装：makeMagicDrag / makeScalable / makeRotatable
+
+这三个方法均基于 `Drag` + `keepTouchesRelative` 的组合，预设了不同的启用项：
+
+```ts
+function makeMagicDrag(element: HTMLElement, options?: MakeMagicDragOptions): Drag
+interface MakeMagicDragOptions extends KeepTouchesRelativeOptions {
+  getPose?: (el: HTMLElement) => Pose
+  setPose?: (el: HTMLElement, pose: Pose) => void
+}
+
+function makeScalable(element: HTMLElement, options?: { getPose?: (el: HTMLElement) => Pose; setPose?: (el: HTMLElement, pose: Pose) => void }): Drag
+
+function makeRotatable(element: HTMLElement, options?: { getPose?: (el: HTMLElement) => Pose; setPose?: (el: HTMLElement, pose: Pose) => void }): Drag
+```
+
+参数表（MakeMagicDragOptions 重点）：
+
+| 名称 | 类型 | 描述 |
+| --- | --- | --- |
+| enableMove | boolean | 启用移动，默认 true |
+| enableScale | boolean | 启用缩放，默认 true |
+| enableRotate | boolean | 启用旋转，默认 true |
+| singleFingerPriority | ('scale' \| 'rotate' \| 'drag')[] | 单指优先级，默认 ['drag'] |
+| transformOrigin | string | 姿态应用的 transform-origin，默认 'center center' |
+| transition | string | 姿态应用的 transition |
+| getPose | (el) => Pose | 自定义读取位姿 |
+| setPose | (el, pose) => void | 自定义写入位姿 |
+
 ### 工具类 MatrixTransforms
 
 ```ts
@@ -232,6 +339,16 @@ class MatrixTransforms {
 
 - 用途：简化复杂几何变换/插值的计算，内部配合 `MathUtils`。
 
+常用方法说明：
+
+| 方法 | 参数 | 返回 | 描述 |
+| --- | --- | --- | --- |
+| poseToMatrix | pose: Pose | 任意 | 将姿态转为矩阵表示（内部结构依赖实现） |
+| calculateTransformDelta | fromPose: Pose, toPose: Pose | 任意 | 计算两姿态之间的变换差值 |
+| calculateRelativePosition | touchPoint, elementCenter, elementSize, pose | 任意 | 计算触点在元素局部坐标中的相对位置 |
+| calculateNewTouchPosition | relativePosition, newElementCenter, newElementSize, newPose | [number, number] | 根据新姿态反推新的触点位置 |
+| interpolatePose | fromPose, toPose, t | Pose | 在两姿态间插值 |
+
 ### 数学工具 MathUtils 及导出
 
 ```ts
@@ -248,6 +365,17 @@ class MathUtils {
 // 还会转出常用 math.js 方法
 export { evaluate, matrix, multiply, subtract, add, norm, cos, sin, pi }
 ```
+
+常用方法说明：
+
+| 方法 | 描述 |
+| --- | --- |
+| createTransformMatrix | 创建平移/缩放/旋转的组合矩阵（弧度制） |
+| transformPoint | 将点乘以矩阵进行坐标变换 |
+| distance | 计算两点距离 |
+| angle | 计算两点连线的极角（弧度） |
+| evaluate | 计算表达式（math.js） |
+| degToRad / radToDeg | 角度/弧度转换 |
 
 ---
 
