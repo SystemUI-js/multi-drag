@@ -6,6 +6,28 @@
 
 [DEMO](https://systemui-js.github.io/multi-drag/)
 
+## 构建说明
+
+项目支持分别构建 API 接口和 Demo：
+
+```bash
+# 构建 API 接口（用于发布到 npm）
+npm run build:lib
+
+# 构建 Demo（用于 GitHub Pages）
+npm run build:demo
+
+# 构建所有内容
+npm run build:all
+
+# 生成类型定义文件
+npm run build:types
+```
+
+- API 接口文件位于 `dist/` 目录下（`index.js` 和 `index.esm.js`）
+- Demo 文件位于 `dist/assets/` 目录下
+- 类型定义文件位于 `dist/` 目录下
+
 ## 特性（Features）
 
 支持多个手指**同时**拖动多个元素（当然也支持鼠标拖动）

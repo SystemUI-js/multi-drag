@@ -6,6 +6,8 @@
     "dev": "vite",
     "build": "vite build && tsc --project tsconfig.build.json",
     "build:lib": "vite build --mode lib",
+    "build:demo": "vite build --mode demo",
+    "build:all": "npm run build:lib && npm run build:demo",
     "build:types": "tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings=0",
@@ -17,7 +19,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:basic": "playwright test tests/e2e/multi-touch.spec.ts --project=chromium",
     "test:e2e:report": "playwright show-report",
-    "prepublishOnly": "npm run test && npm run build",
+    "prepublishOnly": "npm run test && npm run build:all",
     "publish:npm": "npm publish",
     "release": "npm run prepublishOnly && npm run publish:npm"
   },
