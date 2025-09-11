@@ -115,7 +115,8 @@ class DragManager {
     const dragEvent = this.createMouseDragEvent(event)
     const targetElement = dragEvent.target as HTMLElement | null
     for (const dragInstance of this.dragInstances) {
-      if (targetElement && dragInstance.getElement().contains(targetElement)) {
+        // 这里不能用contains因为如果嵌套了就凉了
+      if (targetElement && dragInstance.getElement() === targetElement) {
         const didStart = dragInstance.handleStart([dragEvent])
         if (didStart) {
           this.activeDrags.set(dragEvent.identifier, dragInstance)
@@ -134,7 +135,8 @@ class DragManager {
       const targetElement = dragEvent.target as HTMLElement | null
       if (!targetElement) continue
       for (const dragInstance of this.dragInstances) {
-        if (dragInstance.getElement().contains(targetElement)) {
+        // 这里不能用contains因为如果嵌套了就凉了
+        if (dragInstance.getElement() === targetElement) {
           const list = group.get(dragInstance) || []
           list.push(dragEvent)
           group.set(dragInstance, list)

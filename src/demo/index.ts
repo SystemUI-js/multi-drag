@@ -1,5 +1,6 @@
 import '../style.css'
 import { Drag, keepTouchesRelative, getPoseFromElement, type GestureParams, type DragEvent } from '..'
+import { DragContainer } from '../dragContainer'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -17,6 +18,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 `
+
+new DragContainer(document.getElementById('drag-zone') as HTMLElement)
 
 // 为每个 Item 创建不同的手势实例
 const item1 = document.getElementById('item1') as HTMLElement
