@@ -1,10 +1,12 @@
 import {
     keepTouchesRelative,
-    getPoseFromElement,
-    applyPoseToElement,
     type GestureParams,
     type Pose
 } from '../dragMethods'
+import {
+    getPoseFromElement,
+    applyPoseToElement
+} from '../../utils/dragUtils'
 import type { DragEvent } from '../../dragManager'
 
 // 创建模拟的 DragEvent

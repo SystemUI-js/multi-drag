@@ -1,11 +1,13 @@
 import { Drag, type DragOptions, type DragStartPayload } from './index'
 import {
-  type Pose,
-  getPoseFromElement,
-  applyPoseToElement,
   keepTouchesRelative,
   type KeepTouchesRelativeOptions
 } from './dragMethods'
+import {
+  type Pose,
+  getPoseFromElement,
+  applyPoseToElement
+} from '../utils/dragUtils'
 import type { DragEvent } from '../dragManager'
 import type { GetPoseFunction, SetPoseFunction } from './makeDraggable'
 
@@ -75,4 +77,3 @@ export function makeMagicDrag(
 
   return new Drag(element, dragOptions)
 }
-

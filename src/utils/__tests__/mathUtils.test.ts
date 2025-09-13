@@ -6,21 +6,20 @@ describe('MathUtils with math.js', () => {
     const transform = MathUtils.createTransformMatrix(10, 20, 2, 2, Math.PI / 4)
 
     // 应用到点 (1, 0)
-    const result = MathUtils.transformPoint([1, 0], transform)
+    const result = MathUtils.transformPoint({x: 1, y: 0}, transform)
 
     // 验证结果合理
-    expect(result).toHaveLength(2)
-    expect(typeof result[0]).toBe('number')
-    expect(typeof result[1]).toBe('number')
+    expect(typeof result.x).toBe('number')
+    expect(typeof result.y).toBe('number')
   })
 
   test('应该能计算两点距离', () => {
-    const distance = MathUtils.distance([0, 0], [3, 4])
+    const distance = MathUtils.distance({x: 0, y: 0}, {x: 3, y: 4})
     expect(distance).toBeCloseTo(5) // 3-4-5 直角三角形
   })
 
   test('应该能计算两点角度', () => {
-    const angle = MathUtils.angle([0, 0], [1, 1])
+    const angle = MathUtils.angle({x: 0, y: 0}, {x: 1, y: 1})
     expect(angle).toBeCloseTo(Math.PI / 4) // 45度
   })
 
@@ -56,21 +55,21 @@ describe('MathUtils with math.js', () => {
     const translate = MathUtils.createTransformMatrix(10, 20, 1, 1, 0)
 
     // 原点 (1, 0)
-    let point: [number, number] = [1, 0]
+    let point = {x: 1, y: 0}
 
     // 应用缩放
     point = MathUtils.transformPoint(point, scale)
-    expect(point[0]).toBeCloseTo(2)
-    expect(point[1]).toBeCloseTo(0)
+    expect(point.x).toBeCloseTo(2)
+    expect(point.y).toBeCloseTo(0)
 
     // 应用旋转
     point = MathUtils.transformPoint(point, rotate)
-    expect(point[0]).toBeCloseTo(0, 5)
-    expect(point[1]).toBeCloseTo(2, 5)
+    expect(point.x).toBeCloseTo(0, 5)
+    expect(point.y).toBeCloseTo(2, 5)
 
     // 应用平移
     point = MathUtils.transformPoint(point, translate)
-    expect(point[0]).toBeCloseTo(10, 5)
-    expect(point[1]).toBeCloseTo(22, 5)
+    expect(point.x).toBeCloseTo(10, 5)
+    expect(point.y).toBeCloseTo(22, 5)
   })
 })

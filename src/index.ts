@@ -24,18 +24,24 @@ export {
   type MakeMagicDragOptions
 } from './drag/makeMagicDrag'
 
+export {
+  type Point
+} from './utils/mathUtils'
+
 // 拖拽方法和工具函数导出
 export {
-  getPoseFromElement,
-  applyPoseToElement,
   keepTouchesRelative,
-  type Pose,
-  type Point,
   type GestureParams,
-  type ApplyPoseOptions,
   type KeepTouchesRelativeOptions,
   type KeepTouchesRelativeAdapters
 } from './drag/dragMethods'
+
+export {
+  getPoseFromElement,
+  applyPoseToElement,
+  type ApplyPoseOptions,
+  type Pose
+} from './utils/dragUtils'
 
 // 工具函数导出
 export {

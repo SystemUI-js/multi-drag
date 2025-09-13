@@ -1,5 +1,6 @@
 import '../style.css'
-import { Drag, keepTouchesRelative, getPoseFromElement, type GestureParams, type DragEvent } from '..'
+import { Drag, keepTouchesRelative, type GestureParams, type DragEvent } from '..'
+import { getPoseFromElement } from '../utils/dragUtils'
 import { DragContainer } from '../dragContainer'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -19,7 +20,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   </div>
 `
 
-new DragContainer(document.getElementById('drag-zone') as HTMLElement)
+const dragContainer = new DragContainer(document.getElementById('drag-zone') as HTMLElement, {
+  selectOnMove: true,
+})
 
 // 为每个 Item 创建不同的手势实例
 const item1 = document.getElementById('item1') as HTMLElement
@@ -29,7 +32,7 @@ const item3 = document.getElementById('item3') as HTMLElement
 // Item1: 拖拽+缩放（禁用旋转）
 let item1StartEvents: DragEvent[] | null = null
 
-new Drag(item1, {
+const drag1 = new Drag(item1, {
     onDragStart: (element, events) => {
         // 设置视觉反馈
         element.style.opacity = '0.8'
@@ -38,7 +41,10 @@ new Drag(item1, {
         // 保存起始事件，并返回初始 Pose（Drag 会保存并在后续回调传回）
         item1StartEvents = events
         console.log(`单指拖拽优先开始 - Item1，触点数: ${events.length}`)
-        return getPoseFromElement(element)
+        return {
+          initialPose: getPoseFromElement(element),
+          startEvents: events
+        }
     },
 
     onDragMove: (element, events, pose) => {
@@ -46,7 +52,7 @@ new Drag(item1, {
 
         const params: GestureParams = {
             element,
-            initialPose: pose,
+            initialPose: pose.initialPose,
             startEvents: item1StartEvents,
             currentEvents: events
         }
@@ -70,14 +76,17 @@ new Drag(item1, {
 // Item2: 单指缩放优先，双指旋转
 let item2StartEvents: DragEvent[] | null = null
 
-new Drag(item2, {
+const drag2 = new Drag(item2, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
         item2StartEvents = events
         console.log(`单指缩放优先开始 - Item2，触点数: ${events.length}`)
-        return getPoseFromElement(element)
+        return {
+          initialPose: getPoseFromElement(element),
+          startEvents: events
+        }
     },
 
     onDragMove: (element, events, pose) => {
@@ -85,7 +94,7 @@ new Drag(item2, {
 
         const params: GestureParams = {
             element,
-            initialPose: pose,
+            initialPose: pose.initialPose,
             startEvents: item2StartEvents,
             currentEvents: events
         }
@@ -109,14 +118,17 @@ new Drag(item2, {
 // Item3: 单指旋转优先，双指拖拽
 let item3StartEvents: DragEvent[] | null = null
 
-new Drag(item3, {
+const drag3 = new Drag(item3, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
         item3StartEvents = events
         console.log(`单指旋转优先开始 - Item3，触点数: ${events.length}`)
-        return getPoseFromElement(element)
+        return {
+          initialPose: getPoseFromElement(element),
+          startEvents: events
+        }
     },
 
     onDragMove: (element, events, pose) => {
@@ -124,7 +136,7 @@ new Drag(item3, {
 
         const params: GestureParams = {
             element,
-            initialPose: pose,
+            initialPose: pose.initialPose,
             startEvents: item3StartEvents,
             currentEvents: events
         }
@@ -166,6 +178,37 @@ const initializeItemPositions = () => {
 		}
 	})
 }
+
+dragContainer.registerItem(drag1, {
+    onSelected: (item) => {
+        console.log('Item1 被选中')
+        item1.classList.add('selected')
+    },
+    onUnSelected: (item) => {
+        console.log('Item1 被取消选中')
+        item1.classList.remove('selected')
+    }
+})
+dragContainer.registerItem(drag2, {
+    onSelected: (item) => {
+        console.log('Item2 被选中')
+        item2.classList.add('selected')
+    },
+    onUnSelected: (item) => {
+        console.log('Item2 被取消选中')
+        item2.classList.remove('selected')
+    }
+})
+dragContainer.registerItem(drag3, {
+    onSelected: (item) => {
+        console.log('Item3 被选中')
+        item3.classList.add('selected')
+    },
+    onUnSelected: (item) => {
+        console.log('Item3 被取消选中')
+        item3.classList.remove('selected')
+    }
+})
 
 // Initialize item positions when page loads
 initializeItemPositions()

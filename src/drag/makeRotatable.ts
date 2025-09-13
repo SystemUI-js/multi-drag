@@ -1,5 +1,7 @@
 import { Drag, type DragOptions, type DragStartPayload } from './index'
-import { type Pose, getPoseFromElement, applyPoseToElement, keepTouchesRelative } from './dragMethods'
+import { keepTouchesRelative } from './dragMethods'
+import { type Pose } from '../utils/dragUtils'
+import { getPoseFromElement, applyPoseToElement } from '../utils/dragUtils'
 import type { DragEvent } from '../dragManager'
 import type { GetPoseFunction, SetPoseFunction } from './makeDraggable'
 
@@ -61,4 +63,3 @@ export function makeRotatable(
 
   return new Drag(element, dragOptions)
 }
-

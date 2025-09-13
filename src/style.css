@@ -12,6 +12,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -52,6 +53,7 @@ h1 {
   border-radius: 20px;
   padding: 2rem;
   background-color: rgba(36, 36, 36, 0.9);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   z-index: 5;
 }
@@ -68,8 +70,16 @@ h1 {
   border: 2px solid #646cff;
   border-radius: 8px;
   cursor: grab;
+  -webkit-user-select: none;
   user-select: none;
   min-width: 200px;
+  position: absolute;
+}
+
+.draggable-item.selected {
+  background-color: #999999!important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
 }
 
 .draggable-item:hover {

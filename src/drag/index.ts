@@ -1,5 +1,5 @@
 import { dragManager, type DragEvent } from '../dragManager'
-import type { Pose } from './dragMethods'
+import type { Pose } from '../utils/dragUtils'
 
 export interface DragStartPayload<PoseType = Pose> {
   initialPose: PoseType

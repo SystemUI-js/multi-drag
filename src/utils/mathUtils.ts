@@ -35,32 +35,32 @@ export class MathUtils {
 
   /**
    * 将点应用变换矩阵
-   * @param point 2D点 [x, y]
+   * @param point 2D点 {x, y}
    * @param transformMatrix 3x3变换矩阵
    */
-  static transformPoint(point: [number, number], transformMatrix: Matrix) {
-    const homogeneousPoint = matrix([point[0], point[1], 1]) as Matrix
+  static transformPoint(point: Point, transformMatrix: Matrix) {
+    const homogeneousPoint = matrix([point.x, point.y, 1])
     const result = multiply(transformMatrix, homogeneousPoint) as Matrix
-    return [result.get([0]) as number, result.get([1]) as number]
+    return { x: result.get([0]), y: result.get([1]) }
   }
 
   /**
    * 计算两点之间的距离
-   * @param p1 点1 [x, y]
-   * @param p2 点2 [x, y]
+   * @param p1 点1 {x, y}
+   * @param p2 点2 {x, y}
    */
-  static distance(p1: [number, number], p2: [number, number]): number {
-    const diff = subtract(p2, p1)
+  static distance(p1: Point, p2: Point): number {
+    const diff = subtract([p2.x, p2.y], [p1.x, p1.y]) as number[]
     return norm(diff) as number
   }
 
   /**
    * 计算两点之间的角度（弧度）
-   * @param p1 起始点 [x, y]
-   * @param p2 结束点 [x, y]
+   * @param p1 起始点 {x, y}
+   * @param p2 结束点 {x, y}
    */
-  static angle(p1: [number, number], p2: [number, number]): number {
-    const diff = subtract(p2, p1)
+  static angle(p1: Point, p2: Point): number {
+    const diff = subtract([p2.x, p2.y], [p1.x, p1.y]) as number[]
     return Math.atan2(diff[1], diff[0])
   }
 
@@ -91,7 +91,37 @@ export class MathUtils {
   static radToDeg(radians: number): number {
     return (radians * 180) / (pi as number)
   }
+
+  /**
+   * 计算多个点的中点（质心）
+   * @param points 点数组
+   * @returns 所有点的中点坐标 {x, y}
+   */
+  static getCentroid(points: Point[]): Point {
+    if (points.length === 0) {
+      throw new Error('点数组不能为空')
+    }
+    
+    const sum = points.reduce(
+      (acc, point) => {
+        acc.x += point.x
+        acc.y += point.y
+        return acc
+      },
+      { x: 0, y: 0 }
+    )
+    
+    return {
+      x: sum.x / points.length,
+      y: sum.y / points.length
+    }
+  }
 }
 
 // 导出一些常用的 math.js 函数
 export { evaluate, matrix, multiply, subtract, add, norm, cos, sin, pi }
+
+export interface Point {
+  x: number
+  y: number
+}
