@@ -1,5 +1,5 @@
 import { MathUtils } from './mathUtils'
-import type { Pose } from '../drag/dragMethods'
+import type { Pose } from '../utils/dragUtils'
 
 /**
  * 使用 math.js 进行高级矩阵变换的工具类

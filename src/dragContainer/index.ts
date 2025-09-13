@@ -48,7 +48,7 @@ class DragContainer {
                     startEvents: events,
                 }
             },
-            onDragMove: (el: HTMLElement, events, payload) => {
+            onDragMove: (_, events, payload) => {
                 console.log(...events.map(event => event.identifier))
                 // 移动距离大于2px则开启选择
                 const startEvents = payload?.startEvents
@@ -83,7 +83,7 @@ class DragContainer {
                     }
                 }
             },
-            onDragEnd: (el: HTMLElement, events, payload) => {
+            onDragEnd: (_, events, payload) => {
                 const startEvents = payload?.startEvents
                 this.element.querySelectorAll('.selection-rect').forEach(ele => {
                     ele.remove()
