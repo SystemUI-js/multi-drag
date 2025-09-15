@@ -29,17 +29,12 @@ const item1 = document.getElementById('item1') as HTMLElement
 const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 
-// Item1: 拖拽+缩放（禁用旋转）
-let item1StartEvents: DragEvent[] | null = null
-
 const drag1 = new Drag(item1, {
     onDragStart: (element, events) => {
         // 设置视觉反馈
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        // 保存起始事件，并返回初始 Pose（Drag 会保存并在后续回调传回）
-        item1StartEvents = events
         console.log(`单指拖拽优先开始 - Item1，触点数: ${events.length}`)
         return {
           initialPose: getPoseFromElement(element),
@@ -48,12 +43,12 @@ const drag1 = new Drag(item1, {
     },
 
     onDragMove: (element, events, pose) => {
-        if (!item1StartEvents || !pose) return
+        if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: item1StartEvents,
+            startEvents: pose.startEvents,
             currentEvents: events
         }
 
@@ -73,16 +68,12 @@ const drag1 = new Drag(item1, {
     }
 })
 
-// Item2: 单指缩放优先，双指旋转
-let item2StartEvents: DragEvent[] | null = null
-
 const drag2 = new Drag(item2, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        item2StartEvents = events
-        console.log(`单指缩放优先开始 - Item2，触点数: ${events.length}`)
+        console.log(`单指缩放优先开始 - 触点数: ${events.length}`)
         return {
           initialPose: getPoseFromElement(element),
           startEvents: events
@@ -90,12 +81,12 @@ const drag2 = new Drag(item2, {
     },
 
     onDragMove: (element, events, pose) => {
-        if (!item2StartEvents || !pose) return
+        if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: item2StartEvents,
+            startEvents: pose.startEvents,
             currentEvents: events
         }
 
@@ -115,15 +106,11 @@ const drag2 = new Drag(item2, {
     }
 })
 
-// Item3: 单指旋转优先，双指拖拽
-let item3StartEvents: DragEvent[] | null = null
-
 const drag3 = new Drag(item3, {
     onDragStart: (element, events) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        item3StartEvents = events
         console.log(`单指旋转优先开始 - Item3，触点数: ${events.length}`)
         return {
           initialPose: getPoseFromElement(element),
@@ -132,12 +119,12 @@ const drag3 = new Drag(item3, {
     },
 
     onDragMove: (element, events, pose) => {
-        if (!item3StartEvents || !pose) return
+        if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: item3StartEvents,
+            startEvents: pose.startEvents,
             currentEvents: events
         }
 
