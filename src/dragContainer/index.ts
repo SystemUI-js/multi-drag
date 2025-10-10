@@ -1,8 +1,7 @@
 import { Drag } from "../drag"
-import { getPoseFromElement, toPoints } from "../utils/dragUtils"
-import { MathUtils } from "../utils/mathUtils"
+import { getPoseFromElement } from "../utils/dragUtils"
+import { MathUtils, Point } from "../utils/mathUtils"
 import { DragSelection } from "./selection"
-import { DragEvent } from "../dragManager"
 
 interface RegisterOptions {
     onSelected?: (item: Drag | HTMLElement) => void
@@ -11,14 +10,6 @@ interface RegisterOptions {
 
 interface Options {
     selectOnMove?: boolean
-}
-
-function getMoveDistance(events1: DragEvent[], events2: DragEvent[]) {
-    const points1 = toPoints(events1)
-    const points2 = toPoints(events2)
-    const center1 = MathUtils.getCentroid(points1)
-    const center2 = MathUtils.getCentroid(points2)
-    return MathUtils.distance(center1, center2)
 }
 
 function createSelectionRectElement() {
@@ -36,28 +27,26 @@ class DragContainer {
     private selectionRectElement?: HTMLElement
     constructor(private element: HTMLElement, private options: Options = {}) {
         this.drag = new Drag(element, {
-            onDragStart: (el: HTMLElement, events) => {
-                const points = toPoints(events)
-                const center = MathUtils.getCentroid(points)
+            onDragStart: (el: HTMLElement, localPoints, globalPoints) => {
+                const center = MathUtils.getCentroid(globalPoints)
                 this.selection.setStartPoint(center)
                 const ele = createSelectionRectElement()
                 this.selectionRectElement = ele
                 this.element.appendChild(ele)
                 return {
                     initialPose: getPoseFromElement(el),
-                    startEvents: events,
+                    startLocalPoints: localPoints,
+                    startGlobalPoints: globalPoints
                 }
             },
-            onDragMove: (_, events, payload) => {
-                console.log(...events.map(event => event.identifier))
+            onDragMove: (_, __, globalPoints: Point[], startPayload) => {
                 // 移动距离大于2px则开启选择
-                const startEvents = payload?.startEvents
-                if (startEvents) {
-                    const currentPoints = toPoints(events)
+                const startPoints = startPayload?.startGlobalPoints
+                if (startPoints) {
+                    const currentPoints = globalPoints
                     const currentCenter = MathUtils.getCentroid(currentPoints)
-                    const startPoints = toPoints(startEvents)
                     const startCenter = MathUtils.getCentroid(startPoints)
-                    const moveDistance = getMoveDistance(startEvents, events)
+                    const moveDistance = MathUtils.distance(MathUtils.getCentroid(startPoints), MathUtils.getCentroid(globalPoints))
                     if (moveDistance > 1) {
                         this.selection.setEndPoint(currentCenter)
                         const selectionRect = this.selection.getSelectionRect()
@@ -83,13 +72,13 @@ class DragContainer {
                     }
                 }
             },
-            onDragEnd: (_, events, payload) => {
-                const startEvents = payload?.startEvents
+            onDragEnd: (_, __, globalPoints: Point[], startPayload) => {
+                const startPoints = startPayload?.startGlobalPoints
                 this.element.querySelectorAll('.selection-rect').forEach(ele => {
                     ele.remove()
                 })
-                if (startEvents) {
-                    const moveDistance = getMoveDistance(startEvents, events)
+                if (startPoints) {
+                    const moveDistance = MathUtils.distance(MathUtils.getCentroid(startPoints), MathUtils.getCentroid(globalPoints))
                     if (moveDistance <= 1) {
                         this.clearSelection()
                     }

@@ -1,13 +1,12 @@
-import type { DragEvent } from '../dragManager'
 import { Point } from '../utils/mathUtils'
 import type { Pose, ApplyPoseOptions } from '../utils/dragUtils'
-import { getPoseFromElement, applyPoseToElement, toPoints } from '../utils/dragUtils'
+import { getPoseFromElement, applyPoseToElement } from '../utils/dragUtils'
 
 export interface GestureParams {
   element: HTMLElement
   initialPose: Pose
-  startEvents: DragEvent[]
-  currentEvents: DragEvent[]
+  startGlobalPoints: Point[]
+  currentGlobalPoints: Point[]
 }
 
 export interface KeepTouchesRelativeOptions extends ApplyPoseOptions {
@@ -159,7 +158,7 @@ export function keepTouchesRelative(
   const getPose = adapters?.getPose ?? getPoseFromElement
   const setPose = adapters?.setPose ?? applyPoseToElement
 
-  const { element, initialPose: providedInitialPose, startEvents, currentEvents } = params
+  const { element, initialPose: providedInitialPose, startGlobalPoints, currentGlobalPoints } = params
 
   // 解析配置选项，设置默认值
   const {
@@ -170,8 +169,8 @@ export function keepTouchesRelative(
     ...applyOptions
   } = options || {}
 
-  const S = toPoints(startEvents)
-  const C = toPoints(currentEvents)
+  const S = startGlobalPoints
+  const C = currentGlobalPoints
   if (!S[0] || !C[0]) return
 
   // 若调用方未提供 initialPose，则使用适配器自动获取一次快照

@@ -35,7 +35,7 @@ export function makeScalable(
       return payload
     },
 
-    onDragMove: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload<Pose>) => {
+    onDragMove: (element: HTMLElement, localPoints, globalPoints, startPayload?: DragStartPayload<Pose>) => {
       keepTouchesRelative(
         {
           element,
@@ -56,7 +56,7 @@ export function makeScalable(
       )
     },
 
-    onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
+    onDragEnd: (_element: HTMLElement) => {
       // no-op for now
     }
   }
