@@ -2,7 +2,7 @@ import { Drag, type DragOptions, type DragStartPayload } from './index'
 import { keepTouchesRelative } from './dragMethods'
 import { type Pose } from '../utils/dragUtils'
 import { getPoseFromElement, applyPoseToElement } from '../utils/dragUtils'
-import type { DragEvent } from '../dragManager'
+import { Point } from '../utils/mathUtils'
 
 // Position interface
 export interface Position {
@@ -47,26 +47,26 @@ export function makeDraggable(
   } = options
 
   const dragOptions: DragOptions = {
-    onDragStart: (element: HTMLElement, events: DragEvent[]) => {
+    onDragStart: (element: HTMLElement, localPoints: Point[], globalPoints: Point[]) => {
       const initialPose = getPose(element)
       // Ensure the element has position absolute or relative for dragging
       const computedStyle = window.getComputedStyle(element)
       if (computedStyle.position === 'static') {
         element.style.position = 'relative'
       }
-      // 返回 payload：包含 initPose 与 startEvents
-      const payload: DragStartPayload<Pose> = { initialPose, startEvents: events }
+      // 返回 payload：包含 initPose 与 startLocalPoints
+      const payload: DragStartPayload<Pose> = { initialPose, startLocalPoints: localPoints, startGlobalPoints: globalPoints }
       return payload
     },
 
-    onDragMove: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload<Pose>) => {
+    onDragMove: (element: HTMLElement, _, globalPoints: Point[], startPayload?: DragStartPayload<Pose>) => {
       // 使用 keepTouchesRelative 仅启用移动，禁用缩放与旋转
       keepTouchesRelative(
         {
           element,
           initialPose: startPayload?.initialPose ?? getPose(element),
-          startEvents: startPayload?.startEvents ?? [],
-          currentEvents: events
+          startGlobalPoints: startPayload?.startGlobalPoints ?? [],
+          currentGlobalPoints: globalPoints
         },
         {
           enableMove: true,
@@ -81,7 +81,7 @@ export function makeDraggable(
       )
     },
 
-    onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
+    onDragEnd: (_element: HTMLElement, _localPoints: Point[], _globalPoints: Point[], _) => {
       // Optional: Could add cleanup or final position adjustment here
     }
   }

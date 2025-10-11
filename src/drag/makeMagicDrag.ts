@@ -8,8 +8,8 @@ import {
   getPoseFromElement,
   applyPoseToElement
 } from '../utils/dragUtils'
-import type { DragEvent } from '../dragManager'
 import type { GetPoseFunction, SetPoseFunction } from './makeDraggable'
+import { Point } from '../utils/mathUtils'
 
 export interface MakeMagicDragOptions extends KeepTouchesRelativeOptions {
   getPose?: GetPoseFunction
@@ -37,23 +37,23 @@ export function makeMagicDrag(
   } = options
 
   const dragOptions: DragOptions = {
-    onDragStart: (element: HTMLElement, events: DragEvent[]) => {
+    onDragStart: (element: HTMLElement, localPoints: Point[], globalPoints: Point[]) => {
       const initialPose = getPose(element)
       const computedStyle = window.getComputedStyle(element)
       if (computedStyle.position === 'static') {
         element.style.position = 'relative'
       }
-      const payload: DragStartPayload<Pose> = { initialPose, startEvents: events }
+      const payload: DragStartPayload<Pose> = { initialPose, startGlobalPoints: globalPoints, startLocalPoints: localPoints }
       return payload
     },
 
-    onDragMove: (element: HTMLElement, events: DragEvent[], startPayload?: DragStartPayload<Pose>) => {
+    onDragMove: (element: HTMLElement, _, globalPoints: Point[], startPayload?: DragStartPayload<Pose>) => {
       keepTouchesRelative(
         {
           element,
           initialPose: startPayload?.initialPose ?? getPose(element),
-          startEvents: startPayload?.startEvents ?? [],
-          currentEvents: events
+          startGlobalPoints: startPayload?.startGlobalPoints ?? [],
+          currentGlobalPoints: globalPoints
         },
         {
           enableMove,
@@ -70,8 +70,8 @@ export function makeMagicDrag(
       )
     },
 
-    onDragEnd: (_element: HTMLElement, _events: DragEvent[]) => {
-      // no-op
+    onDragEnd: (_element: HTMLElement, _localPoints: Point[], _globalPoints: Point[]) => {
+      // Optional: Could add cleanup or final position adjustment here
     }
   }
 

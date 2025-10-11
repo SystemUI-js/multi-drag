@@ -30,26 +30,27 @@ const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 
 const drag1 = new Drag(item1, {
-    onDragStart: (element, events) => {
+    onDragStart: (element, localPoints, globalPoints) => {
         // 设置视觉反馈
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        console.log(`单指拖拽优先开始 - Item1，触点数: ${events.length}`)
+        console.log(`单指拖拽优先开始 - Item1，触点数: ${localPoints.length}`)
         return {
           initialPose: getPoseFromElement(element),
-          startEvents: events
+          startLocalPoints: localPoints,
+          startGlobalPoints: globalPoints
         }
     },
 
-    onDragMove: (element, events, pose) => {
+    onDragMove: (element, _, globalPoints, pose) => {
         if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: pose.startEvents,
-            currentEvents: events
+            startGlobalPoints: pose.startGlobalPoints,
+            currentGlobalPoints: globalPoints
         }
 
         // 单指拖拽优先，双指支持缩放
@@ -69,25 +70,26 @@ const drag1 = new Drag(item1, {
 })
 
 const drag2 = new Drag(item2, {
-    onDragStart: (element, events) => {
+    onDragStart: (element, localPoints, globalPoints) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        console.log(`单指缩放优先开始 - 触点数: ${events.length}`)
+        console.log(`单指缩放优先开始 - 触点数: ${localPoints.length}`)
         return {
           initialPose: getPoseFromElement(element),
-          startEvents: events
+          startLocalPoints: localPoints,
+          startGlobalPoints: globalPoints
         }
     },
 
-    onDragMove: (element, events, pose) => {
+    onDragMove: (element, _, globalPoints, pose) => {
         if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: pose.startEvents,
-            currentEvents: events
+            startGlobalPoints: pose.startGlobalPoints,
+            currentGlobalPoints: globalPoints
         }
 
         // 单指缩放优先，双指支持旋转
@@ -99,7 +101,7 @@ const drag2 = new Drag(item2, {
         })
     },
 
-    onDragEnd: (element, _events, _pose) => {
+    onDragEnd: (element, _localPoints, _pose) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
         console.log(`单指缩放优先结束 - Item2`)
@@ -107,25 +109,26 @@ const drag2 = new Drag(item2, {
 })
 
 const drag3 = new Drag(item3, {
-    onDragStart: (element, events) => {
+    onDragStart: (element, localPoints, globalPoints) => {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        console.log(`单指旋转优先开始 - Item3，触点数: ${events.length}`)
+        console.log(`单指旋转优先开始 - Item3，触点数: ${localPoints.length}`)
         return {
-          initialPose: getPoseFromElement(element),
-          startEvents: events
+            initialPose: getPoseFromElement(element),
+            startLocalPoints: localPoints,
+            startGlobalPoints: globalPoints
         }
     },
 
-    onDragMove: (element, events, pose) => {
+    onDragMove: (element, _, globalPoints, pose) => {
         if (!pose) return
 
         const params: GestureParams = {
             element,
             initialPose: pose.initialPose,
-            startEvents: pose.startEvents,
-            currentEvents: events
+            startGlobalPoints: pose.startGlobalPoints,
+            currentGlobalPoints: globalPoints
         }
 
         // 单指旋转优先，双指支持拖拽
@@ -137,7 +140,7 @@ const drag3 = new Drag(item3, {
         })
     },
 
-    onDragEnd: (element, _events, _pose) => {
+    onDragEnd: (element, _localPoints, _pose) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
         console.log(`单指旋转优先结束 - Item3`)
