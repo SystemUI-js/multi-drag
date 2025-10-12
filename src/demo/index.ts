@@ -1,7 +1,6 @@
 import '../style.css'
-import { Drag, keepTouchesRelative, type GestureParams, type DragEvent } from '..'
+import { Drag, keepTouchesRelative, type GestureParams } from '..'
 import { getPoseFromElement } from '../utils/dragUtils'
-import { DragContainer } from '../dragContainer'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -19,10 +18,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
   </div>
 `
-
-const dragContainer = new DragContainer(document.getElementById('drag-zone') as HTMLElement, {
-  selectOnMove: true,
-})
 
 // 为每个 Item 创建不同的手势实例
 const item1 = document.getElementById('item1') as HTMLElement
@@ -168,37 +163,6 @@ const initializeItemPositions = () => {
 		}
 	})
 }
-
-dragContainer.registerItem(drag1, {
-    onSelected: (item) => {
-        console.log('Item1 被选中')
-        item1.classList.add('selected')
-    },
-    onUnSelected: (item) => {
-        console.log('Item1 被取消选中')
-        item1.classList.remove('selected')
-    }
-})
-dragContainer.registerItem(drag2, {
-    onSelected: (item) => {
-        console.log('Item2 被选中')
-        item2.classList.add('selected')
-    },
-    onUnSelected: (item) => {
-        console.log('Item2 被取消选中')
-        item2.classList.remove('selected')
-    }
-})
-dragContainer.registerItem(drag3, {
-    onSelected: (item) => {
-        console.log('Item3 被选中')
-        item3.classList.add('selected')
-    },
-    onUnSelected: (item) => {
-        console.log('Item3 被取消选中')
-        item3.classList.remove('selected')
-    }
-})
 
 // Initialize item positions when page loads
 initializeItemPositions()
