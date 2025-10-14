@@ -31,6 +31,7 @@ export function makeMagicDrag(
     enableMove = true,
     enableScale = true,
     enableRotate = true,
+    inertialDrag = false,
     singleFingerPriority = ['drag'],
     transformOrigin = 'center center',
     transition
@@ -70,8 +71,10 @@ export function makeMagicDrag(
       )
     },
 
-    onDragEnd: (_element: HTMLElement, _localPoints: Point[], _globalPoints: Point[]) => {
-      // Optional: Could add cleanup or final position adjustment here
+    onDragEnd: (_element: HTMLElement, _localPoints: Point[], _globalPoints: Point[], _startPayload?: DragStartPayload, duration?: number) => {
+      // 可选：可以在这里添加清理或最终位置调整，duration参数表示拖拽持续的时间（毫秒）
+      // 当启用惯性拖拽时，可以使用duration来计算速度和应用惯性效果
+      // console.log('拖拽持续时间:', duration, '毫秒')
     }
   }
 

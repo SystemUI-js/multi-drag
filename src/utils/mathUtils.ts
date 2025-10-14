@@ -125,3 +125,44 @@ export interface Point {
   x: number
   y: number
 }
+
+/**
+ * 计算拖拽的平均速度
+ * @param startPoints 起始位置点数组
+ * @param endPoints 结束位置点数组
+ * @param duration 拖拽持续时间（毫秒）
+ * @returns 速度向量 {x, y}，单位为像素/秒
+ */
+export function calculateVelocity(startPoints: Point[], endPoints: Point[], duration: number): Point {
+  if (startPoints.length === 0 || endPoints.length === 0 || startPoints.length !== endPoints.length) {
+    return { x: 0, y: 0 }
+  }
+
+  // 如果持续时间为0或负数，返回0速度
+  if (duration <= 0) {
+    return { x: 0, y: 0 }
+  }
+
+  // 计算每个对应点对的位移
+  let totalDisplacementX = 0
+  let totalDisplacementY = 0
+
+  for (let i = 0; i < startPoints.length; i++) {
+    const start = startPoints[i]
+    const end = endPoints[i]
+    totalDisplacementX += end.x - start.x
+    totalDisplacementY += end.y - start.y
+  }
+
+  // 计算平均位移
+  const averageDisplacementX = totalDisplacementX / startPoints.length
+  const averageDisplacementY = totalDisplacementY / startPoints.length
+
+  // 将毫秒转换为秒，计算速度（像素/秒）
+  const seconds = duration / 1000
+  
+  return {
+    x: averageDisplacementX / seconds,
+    y: averageDisplacementY / seconds
+  }
+}

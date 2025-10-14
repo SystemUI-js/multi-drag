@@ -26,6 +26,7 @@
   "devDependencies": {
     "@playwright/test": "^1.54.2",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^20.5.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
@@ -42,6 +43,7 @@
     "vite-plugin-checker": "^0.6.2"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "mathjs": "^14.6.0"
   },
   "publishConfig": {

@@ -13,6 +13,7 @@ export interface KeepTouchesRelativeOptions extends ApplyPoseOptions {
   enableScale?: boolean    // 是否启用缩放，默认 true
   enableRotate?: boolean   // 是否启用旋转，默认 true
   enableMove?: boolean     // 是否启用移动，默认 true
+  inertialDrag?: boolean   // 是否启用惯性拖拽，默认 true
   singleFingerPriority?: ('scale' | 'rotate' | 'drag')[]  // 单指时的手势优先级列表，默认 ['drag']
 }
 
@@ -128,16 +129,6 @@ function computeMultiFingerUpdate(params: {
 
   return { left, top, scale, rotationRad }
 }
-
-
-
-
-
-
-
-
-
-
 
 // 4) 保持 currentEvents 的触摸点在元素中的相对位置（百分比）不变
 // 思路：

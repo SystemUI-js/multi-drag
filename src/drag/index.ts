@@ -58,8 +58,9 @@ export interface DragOptions {
    * @param localPoints 在元素内的坐标点
    * @param globalPoints 在视窗内的坐标点（clientX/Y）
    * @param startPayload 拖拽开始时的payload
+   * @param duration 拖拽持续的时间（毫秒）
    */
-  onDragEnd?: (element: HTMLElement, localPoints: Point[], globalPoints: Point[], startPayload?: DragStartPayload) => void
+  onDragEnd?: (element: HTMLElement, localPoints: Point[], globalPoints: Point[], startPayload?: DragStartPayload, duration?: number) => void
 }
 
 export class Drag {
@@ -68,6 +69,8 @@ export class Drag {
   private isDragging: boolean = false
   // onDragStart 可返回并保存的 payload
   private startPayload: DragStartPayload | undefined
+  // 记录拖拽开始的时间戳
+  private dragStartTime: number = 0
 
   constructor(element: HTMLElement, options: DragOptions = {}) {
     this.element = element
@@ -96,6 +99,8 @@ export class Drag {
 
     // 重置 startPayload
     this.startPayload = undefined
+    // 记录拖拽开始时间
+    this.dragStartTime = Date.now()
 
     // Call user-defined onDragStart callback 并接收可选 payload
     if (this.options.onDragStart) {
@@ -144,7 +149,10 @@ export class Drag {
       const globalPoints = convertToGlobalPoints(events)
       const localPoints = convertToLocalPoints(globalPoints, this.element)
 
-      this.options.onDragEnd(this.element, localPoints, globalPoints, this.startPayload)
+      // 计算拖拽持续时间
+      const duration = Date.now() - this.dragStartTime
+      // 调用用户定义的 onDragEnd 回调，并传入持续时间
+      this.options.onDragEnd(this.element, localPoints, globalPoints, this.startPayload, duration)
     }
 
     // 结束后清理保存的 payload
