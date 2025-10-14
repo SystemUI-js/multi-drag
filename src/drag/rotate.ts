@@ -1,0 +1,95 @@
+import log from 'loglevel';
+import { DragBase, DragOperationType, Options, Pose, defaultGetPose, defaultSetPose } from './base';
+import { Finger, FingerOperationType } from './finger';
+import { cloneDeep } from 'lodash';
+import { Point } from '../utils/mathUtils';
+
+export class Rotate extends DragBase {
+    private isDragComplete = false
+    private startGlobalCenter: Point | null = null
+    constructor(element: HTMLElement, options?: Options) {
+        super(element, { ...options, maxFingerCount: 2 })
+        this.addEventListener(DragOperationType.Start, this.handleStart)
+        this.addEventListener(DragOperationType.Move, this.handleMove)
+        this.addEventListener(DragOperationType.End, this.handleEnd)
+        this.setStartGlobalCenter()
+    }
+    private setStartGlobalCenter() {
+        const rect = this.element.getBoundingClientRect()
+        this.startGlobalCenter = {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+        }
+    }
+    handleStart = (fingers: Finger[]) => {
+        log.info('handleStart', fingers.length)
+        this.isDragComplete = false
+        this.setStartGlobalCenter()
+    }
+    handleMove = (fingers: Finger[]) => {
+        log.info('handleMove', fingers.length)
+        if (this.isDragComplete) {
+            return
+        }
+        const initialPose = cloneDeep(this.initialPose || this.options?.getPose?.(this.element) || defaultGetPose(this.element))
+        const initialRotation = initialPose.rotation || 0
+        if (!fingers.length || !initialPose) {
+            return
+        }
+        const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers, initialPose)
+        const newRotation = initialRotation + angle
+        const newPose = { ...initialPose, rotation: newRotation }
+        this.options?.setPose?.(this.element, newPose) || defaultSetPose(this.element, newPose)
+    }
+    getAngleBySingleFingers(finger: Finger): number {
+        const center = this.startGlobalCenter
+        if (!center) {
+            return 0
+        }
+        const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
+        const currentPoint = finger.getLastOperation(FingerOperationType.Move)?.point
+        if (startPoint && currentPoint) {
+            return this.getAngleByTwoPoints(
+                startPoint,
+                center,
+                currentPoint,
+                center
+            )
+        }
+        return 0
+    }
+    getAngleByTwoPoints(startPoint1: Point, startPoint2: Point, currentPoint1: Point, currentPoint2: Point): number {
+        const startVector = { y: startPoint2.y - startPoint1.y, x: startPoint2.x - startPoint1.x }
+        const currentVector = { y: currentPoint2.y - currentPoint1.y, x: currentPoint2.x - currentPoint1.x }
+        // 计算向量夹角
+        const angle = Math.atan2(currentVector.y, currentVector.x) - Math.atan2(startVector.y, startVector.x)
+        console.log(angle)
+        return angle * 180 / Math.PI
+    }
+    getAngleByTwoFingers(fingers: Finger[], _pose: Pose): number {
+        const finger1 = fingers[0]
+        const finger2 = fingers[1]
+        if (!finger1 || !finger2) {
+            return 0
+        }
+
+        const startPoint1 = finger1.getLastOperation(FingerOperationType.Start)?.point
+        const startPoint2 = finger2.getLastOperation(FingerOperationType.Start)?.point
+        const currentPoint1 = finger1.getLastOperation(FingerOperationType.Move)?.point
+        const currentPoint2 = finger2.getLastOperation(FingerOperationType.Move)?.point
+        if (startPoint1 && startPoint2 && currentPoint1 && currentPoint2) {
+            return this.getAngleByTwoPoints(
+                startPoint1,
+                startPoint2,
+                currentPoint1,
+                currentPoint2
+            )
+        }
+        return 0
+    }
+    handleEnd = (fingers: Finger[]) => {
+        log.info('handleEnd', fingers.length)
+        // 目前设定为1指完成，就停止setPose
+        this.isDragComplete = true
+    }
+}

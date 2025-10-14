@@ -1,3 +1,4 @@
+import log from 'loglevel';
 import { Point } from '../utils/mathUtils'
 import { DragOperationType } from './base';
 
@@ -149,15 +150,46 @@ export class Finger {
     private handleDocumentEnd = (e: MouseEvent) => {
         const endItem = this.pushNewPathItem({ x: e.clientX, y: e.clientY }, e, FingerOperationType.End)
         this.triggerEvent(FingerOperationType.End, endItem)
-        this.destroy()
+        if (this.options?.inertial) {
+            this.handleInertial()
+        } else {
+            this.destroy()
+        }
     }
     private handleDocumentTouchEnd = (e: TouchEvent) => {
-        if (this.touchId !== e.changedTouches[0].identifier) {
+        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId)
+        if (!touch) {
+            // console.log('return')
             return
         }
-        const touch = e.changedTouches[0]
+
         const endItem = this.pushNewPathItem({ x: touch.clientX, y: touch.clientY }, touch, FingerOperationType.End)
         this.triggerEvent(FingerOperationType.End, endItem)
+        if (this.options?.inertial) {
+            this.handleInertial()
+        } else {
+            this.destroy()
+        }
+    }
+    private handleInertial = () => {
+        const lastMove = this.getLastOperation(FingerOperationType.Move)
+        const endItem = this.getLastOperation(FingerOperationType.End)
+        if (lastMove && endItem) {
+            const duration = endItem.timestamp - lastMove.timestamp
+            const distance = Math.sqrt(Math.pow(lastMove.point.x - endItem.point.x, 2) + Math.pow(lastMove.point.y - endItem.point.y, 2))
+            const speed = distance / duration
+            // 减速度
+            const deceleration = 0.5
+            const newSpeed = speed * Math.exp(-deceleration * duration)
+            const angle = Math.atan2(lastMove.point.y - endItem.point.y, lastMove.point.x - endItem.point.x)
+            const newPoint = {
+                x: endItem.point.x + speed * Math.cos(angle) * duration,
+                y: endItem.point.y + speed * Math.sin(angle) * duration
+            }
+
+            const moveItem = this.pushNewPathItem(newPoint, endItem.event, FingerOperationType.Inertial)
+            this.triggerEvent(FingerOperationType.Inertial, moveItem)
+        }
         this.destroy()
     }
     getIsMoving() {

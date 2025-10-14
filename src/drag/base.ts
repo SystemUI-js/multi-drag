@@ -1,5 +1,5 @@
+import log from 'loglevel'
 import { Point } from '../utils/mathUtils'
-import { defaultGetPose } from './drag'
 import { Finger, FingerOperationType } from './finger'
 
 export interface Options {
@@ -14,12 +14,40 @@ export enum DragOperationType {
     Start = 'start',
     Move = 'move',
     End = 'end',
+    AllEnd = 'allEnd',
 }
 
 export interface Pose {
     position: Point;
     rotation?: number;
-    scale?: number;
+    width: number;
+    height: number;
+}
+
+export function defaultGetPose(element: HTMLElement): Pose {
+    const width = element.offsetWidth
+    const height = element.offsetHeight
+    const scale = Number(element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]) || 1
+    return {
+        position: {
+            x: parseFloat(element.style.left || '0'),
+            y: parseFloat(element.style.top || '0'),
+        },
+        rotation: Number(element.style.transform?.match(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]) || 0,
+        width: width * scale,
+        height: height * scale,
+    }
+}
+
+export function defaultSetPose(element: HTMLElement, pose: Pose): void {
+    element.style.left = `${pose.position.x}px`
+    element.style.top = `${pose.position.y}px`
+    if (pose.rotation !== undefined) {
+        element.style.transform = `rotate(${pose.rotation}deg)`
+    }
+    if (pose.width !== undefined && pose.height !== undefined) {
+        element.style.transform += ` scale(${pose.width / pose.width}, ${pose.height / pose.height})`
+    }
 }
 
 export class DragBase {
@@ -59,11 +87,15 @@ export class DragBase {
     }
     private handleTouchStart = (e: TouchEvent) => {
         e.preventDefault()
-        const maxFingerCount = this.options?.maxFingerCount ?? 1
+        const optionsMaxFingerCount = this.options?.maxFingerCount ?? 1
+        const maxFingerCount = optionsMaxFingerCount !== -1 ? optionsMaxFingerCount : Infinity
         const fingers = Finger.createFingersByEvent(this.element, e)
+        log.info('touch start in base', fingers)
         const validFingers = fingers.filter(finger => !finger.getIsDestroyed())
+        log.info('touch start valid fingers', validFingers)
         this.initialPose = this.options?.getPose?.(this.element) || defaultGetPose(this.element)
         this.fingers.push(...validFingers.slice(0, maxFingerCount))
+        log.info('touch start valid fingers after slice', this.fingers)
         validFingers.forEach(finger => {
             finger.addEventListener(FingerOperationType.Move, this.handleFingerMove)
             if (this.options?.inertial) {
@@ -81,9 +113,12 @@ export class DragBase {
     private handleFingerMoveComplete = () => {
         console.log('finger complete')
         this.cleanFingers().then(() => {
+            this.trigger(DragOperationType.End)
             if (this.fingers.length === 0) {
+                this.currentOperationType = DragOperationType.AllEnd
+                this.trigger(DragOperationType.AllEnd)
+            } else {
                 this.currentOperationType = DragOperationType.End
-                this.trigger(DragOperationType.End)
             }
         })
     }

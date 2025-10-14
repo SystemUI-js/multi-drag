@@ -1,30 +1,26 @@
+import log from 'loglevel';
 import { Point } from '../utils/mathUtils';
-import { DragBase, DragOperationType, Options, Pose } from './base';
-import { Finger, FingerOperationType, FingerPathItem } from './finger';
+import { DragBase, DragOperationType, Options, defaultGetPose, defaultSetPose } from './base';
+import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash'
 
-export function defaultGetPose(element: HTMLElement): Pose {
-    return {
-        position: {
-            x: parseFloat(element.style.left || '0'),
-            y: parseFloat(element.style.top || '0'),
-        }
-    }
-}
-
-export function defaultSetPose(element: HTMLElement, pose: Pose): void {
-    element.style.left = `${pose.position.x}px`
-    element.style.top = `${pose.position.y}px`
-}
-
 export class Drag extends DragBase {
+    private isDragComplete = false
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: -1 })
-        this.options = options || {}
+        this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
+        this.addEventListener(DragOperationType.End, this.handleEnd)
+    }
+    handleStart = (fingers: Finger[]) => {
+        log.info('handleStart', fingers.length)
+        this.isDragComplete = false
     }
     handleMove = (fingers: Finger[]) => {
-        console.log('handleMove', fingers.length)
+        log.info('handleMove', fingers.length)
+        if (this.isDragComplete) {
+            return
+        }
         const initialPose = cloneDeep(this.initialPose || this.options?.getPose?.(this.element) || defaultGetPose(this.element))
         if (!fingers.length) {
             return
@@ -46,5 +42,10 @@ export class Drag extends DragBase {
             initialPose.position.y += item.y / validFingerMovements.length
         })
         this.options?.setPose?.(this.element, initialPose) || defaultSetPose(this.element, initialPose)
+    }
+    handleEnd = (fingers: Finger[]) => {
+        log.info('handleEnd', fingers.length)
+        // 目前设定为1指完成，就停止setPose
+        this.isDragComplete = true
     }
 }

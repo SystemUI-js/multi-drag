@@ -7,6 +7,15 @@ import { calculateVelocity } from '../utils/mathUtils'
 import { getInertialDragTimingFunction, makeInertialDrag } from '../drag/inertial';
 import { DragBase, DragOperationType } from '../drag/base';
 import { FingerOperationType, FingerPathItem } from '../drag/finger';
+import VConsole from 'vconsole';
+import log from 'loglevel'
+import { Rotate } from '../drag/rotate';
+
+if (process.env.NODE_ENV === 'development') {
+  log.setLevel('trace');
+  new VConsole();
+  log.info('vConsole 已初始化');
+}
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
@@ -38,7 +47,7 @@ const drag1 = new Drag(item1, {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        console.log(`单指拖拽优先开始 - Item1，触点数: ${localPoints.length}`)
+        log.info(`单指拖拽优先开始 - Item1，触点数: ${localPoints.length}`)
         return {
           initialPose: getPoseFromElement(element),
           startLocalPoints: localPoints,
@@ -68,7 +77,7 @@ const drag1 = new Drag(item1, {
     onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
-        console.log(`单指拖拽优先结束 - Item1，持续时间: ${duration || 0}ms`)
+        log.info(`单指拖拽优先结束 - Item1，持续时间: ${duration || 0}ms`)
     }
 })
 
@@ -77,7 +86,7 @@ const drag2 = new Drag(item2, {
         element.style.opacity = '0.8'
         element.style.zIndex = '1000'
 
-        console.log(`单指缩放优先开始 - 触点数: ${localPoints.length}`)
+        log.info(`单指缩放优先开始 - Item2，触点数: ${localPoints.length}`)
         return {
           initialPose: getPoseFromElement(element),
           startLocalPoints: localPoints,
@@ -107,7 +116,7 @@ const drag2 = new Drag(item2, {
     onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
         element.style.opacity = '1'
         element.style.zIndex = 'auto'
-        console.log(`单指缩放优先结束 - Item2，持续时间: ${duration || 0}ms`)
+        log.info(`单指缩放优先结束 - Item2，持续时间: ${duration || 0}ms`)
     }
 })
 
@@ -116,7 +125,7 @@ const drag2 = new Drag(item2, {
 //         element.style.opacity = '0.8'
 //         element.style.zIndex = '1000'
 
-//         console.log(`单指旋转优先开始 - Item3，触点数: ${localPoints.length}`)
+//         log.info(`单指旋转优先开始 - Item3，触点数: ${localPoints.length}`)
 //         return {
 //             initialPose: getPoseFromElement(element),
 //             startLocalPoints: localPoints,
@@ -168,7 +177,7 @@ const initializeItemPositions = () => {
 			item.style.left = `${initialPositions[index].left}px`
 			item.style.top = `${initialPositions[index].top}px`
 			// 确保元素可以进行 transform 操作
-			item.style.transformOrigin = '0 0'
+			item.style.transformOrigin = 'center'
 		}
 	})
 }
@@ -177,16 +186,16 @@ const initializeItemPositions = () => {
 initializeItemPositions()
 
 // 创建item3的DragBase实例 - 惯性拖拽
-const drag3 = new NewDrag(item3)
+const drag3 = new Rotate(item3)
 
 const drag4 = new DragBase(item4)
 let startPose = getPoseFromElement(item4)
 drag4.addEventListener(DragOperationType.Start, (fingers) => {
-    console.log('drag4 start', fingers)
+    log.info('drag4 start', fingers)
     startPose = getPoseFromElement(item4)
 })
 drag4.addEventListener(DragOperationType.Move, (fingers) => {
-    console.log('drag4 move', fingers)
+    log.info('drag4 move', fingers)
     // 移动item4
     const finger = fingers[0]
     if (finger) {
@@ -201,12 +210,12 @@ drag4.addEventListener(DragOperationType.Move, (fingers) => {
     }
 })
 drag4.addEventListener(DragOperationType.End, (fingers) => {
-    console.log('drag4 end', fingers)
+    log.info('drag4 end', fingers)
 })
 
-console.log('多手势应用初始化完成:')
-console.log('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')
-console.log('- Item2: 单指缩放优先，双指支持旋转 - singleFingerPriority: ["scale", "rotate"]')
-console.log('- Item3: 单指旋转优先，双指支持拖拽 - singleFingerPriority: ["rotate", "drag"]')
-console.log('- Item4: 惯性拖拽 - singleFingerPriority: []')
-console.log('所有功能基于 keepTouchesRelative 函数的优先级配置实现，提供灵活的单指/多指手势组合')
+log.info('多手势应用初始化完成:')
+log.info('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')
+log.info('- Item2: 单指缩放优先，双指支持旋转 - singleFingerPriority: ["scale", "rotate"]')
+log.info('- Item3: 单指旋转优先，双指支持拖拽 - singleFingerPriority: ["rotate", "drag"]')
+log.info('- Item4: 惯性拖拽 - singleFingerPriority: []')
+log.info('所有功能基于 keepTouchesRelative 函数的优先级配置实现，提供灵活的单指/多指手势组合')
