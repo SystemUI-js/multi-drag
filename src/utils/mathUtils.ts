@@ -101,7 +101,7 @@ export class MathUtils {
     if (points.length === 0) {
       throw new Error('点数组不能为空')
     }
-    
+
     const sum = points.reduce(
       (acc, point) => {
         acc.x += point.x
@@ -110,7 +110,7 @@ export class MathUtils {
       },
       { x: 0, y: 0 }
     )
-    
+
     return {
       x: sum.x / points.length,
       y: sum.y / points.length
@@ -124,6 +124,11 @@ export { evaluate, matrix, multiply, subtract, add, norm, cos, sin, pi }
 export interface Point {
   x: number
   y: number
+}
+
+export interface ReadonlyPoint extends Point {
+  readonly x: number
+  readonly y: number
 }
 
 /**
@@ -160,7 +165,7 @@ export function calculateVelocity(startPoints: Point[], endPoints: Point[], dura
 
   // 将毫秒转换为秒，计算速度（像素/秒）
   const seconds = duration / 1000
-  
+
   return {
     x: averageDisplacementX / seconds,
     y: averageDisplacementY / seconds

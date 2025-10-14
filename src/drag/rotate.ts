@@ -39,7 +39,11 @@ export class Rotate extends DragBase {
         const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers, initialPose)
         const newRotation = initialRotation + angle
         const newPose = { ...initialPose, rotation: newRotation }
-        this.options?.setPose?.(this.element, newPose) || defaultSetPose(this.element, newPose)
+        if (this.options?.setPose) {
+            this.options?.setPose(this.element, newPose, initialPose)
+        } else {
+            defaultSetPose(this.element, newPose, initialPose)
+        }
     }
     getAngleBySingleFingers(finger: Finger): number {
         const center = this.startGlobalCenter

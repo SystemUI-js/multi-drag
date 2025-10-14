@@ -1,5 +1,5 @@
 import log from 'loglevel'
-import { Point } from '../utils/mathUtils'
+import { Point, ReadonlyPoint } from '../utils/mathUtils'
 import { Finger, FingerOperationType } from './finger'
 
 export interface Options {
@@ -7,7 +7,7 @@ export interface Options {
     maxFingerCount?: number
     inertial?: boolean
     getPose?: (element: HTMLElement) => Pose
-    setPose?: (element: HTMLElement, pose: Pose) => void
+    setPose?: (element: HTMLElement, pose: Pose, initialPose: Pose) => void
 }
 
 export enum DragOperationType {
@@ -18,35 +18,42 @@ export enum DragOperationType {
 }
 
 export interface Pose {
-    position: Point;
-    rotation?: number;
-    width: number;
-    height: number;
+    readonly position: ReadonlyPoint;
+    readonly rotation?: number;
+    readonly width: number;
+    readonly height: number;
+    readonly scale?: number;
 }
 
 export function defaultGetPose(element: HTMLElement): Pose {
     const width = element.offsetWidth
     const height = element.offsetHeight
-    const scale = Number(element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]) || 1
+    const scale = Number(element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)\)/)?.[1]) || 1
     return {
         position: {
             x: parseFloat(element.style.left || '0'),
             y: parseFloat(element.style.top || '0'),
         },
         rotation: Number(element.style.transform?.match(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]) || 0,
-        width: width * scale,
-        height: height * scale,
+        width: width,
+        height: height,
+        scale,
     }
 }
 
-export function defaultSetPose(element: HTMLElement, pose: Pose): void {
+export function defaultSetPose(element: HTMLElement, pose: Pose, initialPose: Pose): void {
     element.style.left = `${pose.position.x}px`
     element.style.top = `${pose.position.y}px`
     if (pose.rotation !== undefined) {
         element.style.transform = `rotate(${pose.rotation}deg)`
     }
-    if (pose.width !== undefined && pose.height !== undefined) {
-        element.style.transform += ` scale(${pose.width / pose.width}, ${pose.height / pose.height})`
+    if (pose.scale !== undefined) {
+        element.style.transform += ` scale(${pose.scale})`
+        console.log('setPose', element.style.transform)
+    }
+    if (pose.width !== initialPose.width || pose.height !== initialPose.height) {
+        element.style.width = `${pose.width}px`
+        element.style.height = `${pose.height}px`
     }
 }
 

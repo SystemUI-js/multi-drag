@@ -10,6 +10,7 @@ import { FingerOperationType, FingerPathItem } from '../drag/finger';
 import VConsole from 'vconsole';
 import log from 'loglevel'
 import { Rotate } from '../drag/rotate';
+import { Scale } from '../drag/scale';
 
 if (process.env.NODE_ENV === 'development') {
   log.setLevel('trace');
@@ -186,7 +187,7 @@ const initializeItemPositions = () => {
 initializeItemPositions()
 
 // 创建item3的DragBase实例 - 惯性拖拽
-const drag3 = new Rotate(item3)
+const drag3 = new Scale(item3)
 
 const drag4 = new DragBase(item4)
 let startPose = getPoseFromElement(item4)

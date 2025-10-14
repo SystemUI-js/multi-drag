@@ -37,11 +37,17 @@ export class Drag extends DragBase {
             }
             return null
         }).filter(item => item !== null) as Point[]
+        let newPositionX = initialPose.position.x
+        let newPositionY = initialPose.position.y
         validFingerMovements.forEach(item => {
-            initialPose.position.x += item.x / validFingerMovements.length
-            initialPose.position.y += item.y / validFingerMovements.length
+            newPositionX += item.x / validFingerMovements.length
+            newPositionY += item.y / validFingerMovements.length
         })
-        this.options?.setPose?.(this.element, initialPose) || defaultSetPose(this.element, initialPose)
+        if (this.options?.setPose) {
+            this.options?.setPose(this.element, { ...initialPose, position: { x: newPositionX, y: newPositionY } }, initialPose)
+        } else {
+            defaultSetPose(this.element, { ...initialPose, position: { x: newPositionX, y: newPositionY } }, initialPose)
+        }
     }
     handleEnd = (fingers: Finger[]) => {
         log.info('handleEnd', fingers.length)
