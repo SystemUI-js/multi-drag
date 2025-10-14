@@ -8,6 +8,8 @@ export interface Options {
     inertial?: boolean
     getPose?: (element: HTMLElement) => Pose
     setPose?: (element: HTMLElement, pose: Pose, initialPose: Pose) => void
+    // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
+    setPoseOnEnd?: (element: HTMLElement, pose: Pose, initialPose: Pose) => void
 }
 
 export enum DragOperationType {
@@ -128,6 +130,25 @@ export class DragBase {
                 this.currentOperationType = DragOperationType.End
             }
         })
+    }
+    protected getPose(element: HTMLElement): Pose {
+        if (this.options?.getPose) {
+            return this.options.getPose(element)
+        }
+        return defaultGetPose(element)
+    }
+    protected setPose(element: HTMLElement, pose: Pose, initialPose: Pose, type?: DragOperationType): void {
+        if (this.options && type === DragOperationType.End) {
+            if (this.options.setPoseOnEnd) {
+                this.options.setPoseOnEnd(element, pose, initialPose)
+            }
+            return
+        }
+        if (this.options?.setPose) {
+            this.options.setPose(element, pose, initialPose)
+            return
+        }
+        defaultSetPose(element, pose, initialPose)
     }
     addEventListener(type: DragOperationType, callback: (fingers: Finger[]) => void) {
         const callbacks = this.events.get(type) ?? []

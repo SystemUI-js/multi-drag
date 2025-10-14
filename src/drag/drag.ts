@@ -1,11 +1,12 @@
 import log from 'loglevel';
 import { Point } from '../utils/mathUtils';
-import { DragBase, DragOperationType, Options, defaultGetPose, defaultSetPose } from './base';
+import { DragBase, DragOperationType, Options, Pose } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash'
 
 export class Drag extends DragBase {
     private isDragComplete = false
+    private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: -1 })
         this.addEventListener(DragOperationType.Start, this.handleStart)
@@ -21,7 +22,7 @@ export class Drag extends DragBase {
         if (this.isDragComplete) {
             return
         }
-        const initialPose = cloneDeep(this.initialPose || this.options?.getPose?.(this.element) || defaultGetPose(this.element))
+        const initialPose = cloneDeep(this.initialPose || this.getPose(this.element))
         if (!fingers.length) {
             return
         }
@@ -43,14 +44,16 @@ export class Drag extends DragBase {
             newPositionX += item.x / validFingerMovements.length
             newPositionY += item.y / validFingerMovements.length
         })
-        if (this.options?.setPose) {
-            this.options?.setPose(this.element, { ...initialPose, position: { x: newPositionX, y: newPositionY } }, initialPose)
-        } else {
-            defaultSetPose(this.element, { ...initialPose, position: { x: newPositionX, y: newPositionY } }, initialPose)
-        }
+        const newPose = { ...initialPose, position: { x: newPositionX, y: newPositionY } }
+        this.setPose(this.element, newPose, initialPose)
+        this.lastPose = newPose
     }
     handleEnd = (fingers: Finger[]) => {
         log.info('handleEnd', fingers.length)
+        if (this.lastPose && this.initialPose) {
+            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
+        }
+
         // 目前设定为1指完成，就停止setPose
         this.isDragComplete = true
     }

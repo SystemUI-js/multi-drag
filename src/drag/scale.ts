@@ -1,5 +1,5 @@
 import log from 'loglevel';
-import { DragBase, DragOperationType, Options, Pose, defaultGetPose, defaultSetPose } from './base';
+import { DragBase, DragOperationType, Options, Pose } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash';
 import { Point } from '../utils/mathUtils';
@@ -8,6 +8,7 @@ export class Scale extends DragBase {
     private isDragComplete = false
     private startPose: Pose | null = null
     private startGlobalCenter: Point | null = null
+    private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: 2 })
         this.addEventListener(DragOperationType.Start, this.handleStart)
@@ -17,11 +18,7 @@ export class Scale extends DragBase {
         this.setStartGlobalCenter()
     }
     private setStartPose() {
-        if (this.options?.getPose) {
-            this.startPose = this.options?.getPose(this.element)
-        } else {
-            this.startPose = defaultGetPose(this.element)
-        }
+        this.startPose = this.getPose(this.element)
         console.log('this.startPose', this.startPose)
     }
     private setStartGlobalCenter() {
@@ -42,7 +39,7 @@ export class Scale extends DragBase {
         if (this.isDragComplete) {
             return
         }
-        const startPose = cloneDeep(this.startPose || this.options?.getPose?.(this.element) || defaultGetPose(this.element))
+        const startPose = cloneDeep(this.startPose || this.getPose(this.element))
         console.log('scale startPose', startPose)
         if (!fingers.length || !startPose) {
             return
@@ -50,11 +47,8 @@ export class Scale extends DragBase {
         const scale = fingers.length === 1 ? this.getScaleBySingleFingers(fingers[0]) : this.getScaleByTwoFingers(fingers, startPose)
         console.log('scale', scale)
         const newPose = { ...startPose, scale: (startPose?.scale || 1) * scale }
-        if (this.options?.setPose) {
-            this.options?.setPose(this.element, newPose, startPose)
-        } else {
-            defaultSetPose(this.element, newPose, startPose)
-        }
+        this.setPose(this.element, newPose, startPose)
+        this.lastPose = newPose
     }
     getScaleBySingleFingers(finger: Finger): number {
         const center = this.startGlobalCenter
@@ -102,6 +96,10 @@ export class Scale extends DragBase {
     }
     handleEnd = (fingers: Finger[]) => {
         log.info('handleEnd', fingers.length)
+        if (this.lastPose && this.initialPose) {
+            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
+        }
+
         // 目前设定为1指完成，就停止setPose
         this.isDragComplete = true
     }

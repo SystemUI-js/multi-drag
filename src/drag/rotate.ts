@@ -1,5 +1,5 @@
 import log from 'loglevel';
-import { DragBase, DragOperationType, Options, Pose, defaultGetPose, defaultSetPose } from './base';
+import { DragBase, DragOperationType, Options, Pose } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash';
 import { Point } from '../utils/mathUtils';
@@ -7,6 +7,7 @@ import { Point } from '../utils/mathUtils';
 export class Rotate extends DragBase {
     private isDragComplete = false
     private startGlobalCenter: Point | null = null
+    private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: 2 })
         this.addEventListener(DragOperationType.Start, this.handleStart)
@@ -31,7 +32,7 @@ export class Rotate extends DragBase {
         if (this.isDragComplete) {
             return
         }
-        const initialPose = cloneDeep(this.initialPose || this.options?.getPose?.(this.element) || defaultGetPose(this.element))
+        const initialPose = cloneDeep(this.initialPose || this.getPose(this.element))
         const initialRotation = initialPose.rotation || 0
         if (!fingers.length || !initialPose) {
             return
@@ -39,11 +40,8 @@ export class Rotate extends DragBase {
         const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers, initialPose)
         const newRotation = initialRotation + angle
         const newPose = { ...initialPose, rotation: newRotation }
-        if (this.options?.setPose) {
-            this.options?.setPose(this.element, newPose, initialPose)
-        } else {
-            defaultSetPose(this.element, newPose, initialPose)
-        }
+        this.setPose(this.element, newPose, initialPose, DragOperationType.Move)
+        this.lastPose = newPose
     }
     getAngleBySingleFingers(finger: Finger): number {
         const center = this.startGlobalCenter
@@ -93,6 +91,9 @@ export class Rotate extends DragBase {
     }
     handleEnd = (fingers: Finger[]) => {
         log.info('handleEnd', fingers.length)
+        if (this.lastPose && this.initialPose) {
+            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
+        }
         // 目前设定为1指完成，就停止setPose
         this.isDragComplete = true
     }
