@@ -4,26 +4,13 @@ import { cloneDeep } from 'lodash';
 import { Point } from '../utils/mathUtils';
 
 export class Rotate extends DragBase {
-    private startGlobalCenter: Point | null = null
-    private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: 2 })
-        this.addEventListener(DragOperationType.Start, this.handleStart)
+        // this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
         this.addEventListener(DragOperationType.Inertial, this.handleMove)
         this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
-        this.setStartGlobalCenter()
-    }
-    private setStartGlobalCenter() {
-        const rect = this.element.getBoundingClientRect()
-        this.startGlobalCenter = {
-            x: rect.left + rect.width / 2,
-            y: rect.top + rect.height / 2,
-        }
-    }
-    handleStart = () => {
-        this.setStartGlobalCenter()
     }
     handleMove = (fingers: Finger[]) => {
         if (this.currentOperationType !== DragOperationType.Inertial && this.currentOperationType !== DragOperationType.Move) {
@@ -35,13 +22,15 @@ export class Rotate extends DragBase {
             return
         }
         const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers, initialPose)
-        const newRotation = initialRotation + angle
-        const newPose = { ...initialPose, rotation: newRotation }
-        this.setPose(this.element, newPose, initialPose, DragOperationType.Move)
-        this.lastPose = newPose
+        const newPose = { rotation: initialRotation + angle }
+        this.setPose(this.element, newPose, DragOperationType.Move)
     }
     getAngleBySingleFingers(finger: Finger): number {
-        const center = this.startGlobalCenter
+        const globalPose = this.getGlobalPose(this.element)
+        const center = {
+            x: globalPose.position.x + globalPose.width / 2,
+            y: globalPose.position.y + globalPose.height / 2,
+        }
         if (!center) {
             return 1
         }
@@ -86,13 +75,13 @@ export class Rotate extends DragBase {
         return 1
     }
     handleEnd = () => {
-        if (this.lastPose && this.initialPose) {
-            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
-        }
+        // if (this.lastPose && this.initialPose) {
+        //     this.setPose(this.element, this.lastPose, DragOperationType.End)
+        // }
     }
     handleInertialEnd = () => {
-        if (this.lastPose && this.initialPose) {
-            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.InertialEnd)
-        }
+        // if (this.lastPose && this.initialPose) {
+        //     this.setPose(this.element, this.lastPose, DragOperationType.InertialEnd)
+        // }
     }
 }

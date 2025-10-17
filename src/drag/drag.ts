@@ -4,7 +4,6 @@ import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash'
 
 export class Drag extends DragBase {
-    private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: -1 })
         // this.addEventListener(DragOperationType.Start, this.handleStart)
@@ -39,18 +38,17 @@ export class Drag extends DragBase {
             newPositionX += item.x / validFingerMovements.length
             newPositionY += item.y / validFingerMovements.length
         })
-        const newPose = { ...initialPose, position: { x: newPositionX, y: newPositionY } }
-        this.setPose(this.element, newPose, initialPose)
-        this.lastPose = newPose
+        const newPose = { position: { x: newPositionX, y: newPositionY } }
+        this.setPose(this.element, newPose)
     }
     handleEnd = () => {
-        if (this.lastPose && this.initialPose) {
-            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
-        }
+        // if (this.lastPose && this.initialPose) {
+        //     this.setPose(this.element, this.lastPose, DragOperationType.End)
+        // }
     }
     handleInertialEnd = () => {
-        if (this.lastPose && this.initialPose) {
-            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.InertialEnd)
-        }
+        // if (this.lastPose && this.initialPose) {
+        //     this.setPose(this.element, this.lastPose, DragOperationType.InertialEnd)
+        // }
     }
 }

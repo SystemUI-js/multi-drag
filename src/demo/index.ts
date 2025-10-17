@@ -1,8 +1,5 @@
 import '../style.css'
-import { Drag, Scale, Rotate } from '..'
-import { getPoseFromElement } from '../utils/dragUtils'
-import { DragBase, DragOperationType } from '../drag/base';
-import { FingerOperationType, FingerPathItem } from '../drag/finger';
+import { Drag, Scale, Rotate, Mixin, MixinType } from '..'
 import VConsole from 'vconsole';
 import log from 'loglevel'
 
@@ -108,7 +105,7 @@ new Drag(item3, {
   inertial: true
 })
 
-new Drag(item4)
+new Mixin(item4, {}, [MixinType.Rotate, MixinType.Scale, MixinType.Drag])
 
 log.info('多手势应用初始化完成:')
 log.info('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')

@@ -1,3 +1,4 @@
+import log from 'loglevel'
 import { ReadonlyPoint } from '../utils/mathUtils'
 import { Finger, FingerOperationType } from './finger'
 
@@ -6,9 +7,9 @@ export interface Options {
     maxFingerCount?: number
     inertial?: boolean
     getPose?: (element: HTMLElement) => Pose
-    setPose?: (element: HTMLElement, pose: Pose, initialPose: Pose) => void
+    setPose?: (element: HTMLElement, pose: Partial<Pose>) => void
     // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
-    setPoseOnEnd?: (element: HTMLElement, pose: Pose, initialPose: Pose) => void
+    setPoseOnEnd?: (element: HTMLElement, pose: Partial<Pose>) => void
 }
 
 export enum DragOperationType {
@@ -44,18 +45,30 @@ export function defaultGetPose(element: HTMLElement): Pose {
     }
 }
 
-export function defaultSetPose(element: HTMLElement, pose: Pose, initialPose: Pose): void {
-    element.style.left = `${pose.position.x}px`
-    element.style.top = `${pose.position.y}px`
-    if (pose.rotation !== undefined) {
-        element.style.transform = `rotate(${pose.rotation}deg)`
+export function defaultSetPose(element: HTMLElement, pose: Partial<Pose>): void {
+    if (Object.hasOwnProperty.call(pose, 'position')) {
+        element.style.left = `${pose.position!.x}px`
+        element.style.top = `${pose.position!.y}px`
     }
-    if (pose.scale !== undefined) {
-        element.style.transform += ` scale(${pose.scale})`
+    if (Object.hasOwnProperty.call(pose, 'rotation')) {
+        const originRotation = element.style.transform?.match(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]
+        if (originRotation === undefined) {
+            element.style.transform += `rotate(${pose.rotation || 0}deg)`
+        } else {
+            element.style.transform = element.style.transform?.replace(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/, `rotate(${pose.rotation || 0}deg)`) || ''
+        }
     }
-    if (pose.width !== initialPose.width || pose.height !== initialPose.height) {
-        element.style.width = `${pose.width}px`
-        element.style.height = `${pose.height}px`
+    if (Object.hasOwnProperty.call(pose, 'scale')) {
+        const originScale = element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)\)/)?.[1]
+        if (originScale === undefined) {
+            element.style.transform += `scale(${pose.scale || 1})`
+        } else {
+            element.style.transform = element.style.transform?.replace(/scale\((-?(?:\d+)(?:\.\d+)?)\)/, `scale(${pose.scale || 1})`) || ''
+        }
+    }
+    if (Object.hasOwnProperty.call(pose, 'width') || Object.hasOwnProperty.call(pose, 'height')) {
+        element.style.width = `${pose.width || 0}px`
+        element.style.height = `${pose.height || 0}px`
     }
 }
 
@@ -97,6 +110,7 @@ export class DragBase {
         finger.addEventListener(FingerOperationType.InertialEnd, this.handleFingerInertialComplete)
         this.currentOperationType = DragOperationType.Start
         this.trigger(DragOperationType.Start)
+        log.info(`[DragBase] handleMouseDown, fingers length: ${this.fingers.length}`)
     }
     private handleTouchStart = (e: TouchEvent) => {
         if (this.currentOperationType === DragOperationType.Inertial) {
@@ -124,6 +138,7 @@ export class DragBase {
             finger.addEventListener(FingerOperationType.InertialEnd, this.handleFingerInertialComplete)
         })
         this.trigger(DragOperationType.Start)
+        log.info(`[DragBase] handleTouchStart, fingers length: ${this.fingers.length}`)
     }
     private handleFingerMove = () => {
         this.currentOperationType = DragOperationType.Move
@@ -147,18 +162,31 @@ export class DragBase {
         }
         return defaultGetPose(element)
     }
-    protected setPose(element: HTMLElement, pose: Pose, initialPose: Pose, type?: DragOperationType): void {
+    protected getGlobalPose(element: HTMLElement): Pose {
+        const pose = this.getPose(element)
+        const rect = element.getBoundingClientRect()
+        return {
+            ...pose,
+            width: rect.width,
+            height: rect.height,
+            position: {
+                x: rect.x,
+                y: rect.y,
+            },
+        }
+    }
+    protected setPose(element: HTMLElement, pose: Partial<Pose>, type?: DragOperationType): void {
         if (this.options && type === DragOperationType.End) {
             if (this.options.setPoseOnEnd) {
-                this.options.setPoseOnEnd(element, pose, initialPose)
+                this.options.setPoseOnEnd(element, pose)
             }
             return
         }
         if (this.options?.setPose) {
-            this.options.setPose(element, pose, initialPose)
+            this.options.setPose(element, pose)
             return
         }
-        defaultSetPose(element, pose, initialPose)
+        defaultSetPose(element, pose)
     }
     addEventListener(type: DragOperationType, callback: (fingers: Finger[]) => void) {
         const callbacks = this.events.get(type) ?? []
