@@ -1,4 +1,3 @@
-import type { DragEvent } from '../dragManager'
 import { Point } from './mathUtils'
 
 /**

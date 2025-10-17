@@ -1,16 +1,10 @@
-import { InertialDrag } from './../../.history/src/drag/inertialDrag_20251012150459';
 import '../style.css'
-import { Drag, keepTouchesRelative, type GestureParams } from '..'
-import { Drag as NewDrag } from '../drag/drag'
+import { Drag, Scale, Rotate } from '..'
 import { getPoseFromElement } from '../utils/dragUtils'
-import { calculateVelocity } from '../utils/mathUtils'
-import { getInertialDragTimingFunction, makeInertialDrag } from '../drag/inertial';
 import { DragBase, DragOperationType } from '../drag/base';
 import { FingerOperationType, FingerPathItem } from '../drag/finger';
 import VConsole from 'vconsole';
 import log from 'loglevel'
-import { Rotate } from '../drag/rotate';
-import { Scale } from '../drag/scale';
 
 if (process.env.NODE_ENV === 'development') {
   log.setLevel('trace');
@@ -41,85 +35,6 @@ const item1 = document.getElementById('item1') as HTMLElement
 const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 const item4 = document.getElementById('item4') as HTMLElement
-
-const drag1 = new Drag(item1, {
-    onDragStart: (element, localPoints, globalPoints) => {
-        // 设置视觉反馈
-        element.style.opacity = '0.8'
-        element.style.zIndex = '1000'
-
-        log.info(`单指拖拽优先开始 - Item1，触点数: ${localPoints.length}`)
-        return {
-          initialPose: getPoseFromElement(element),
-          startLocalPoints: localPoints,
-          startGlobalPoints: globalPoints
-        }
-    },
-
-    onDragMove: (element, _, globalPoints, pose) => {
-        if (!pose) return
-
-        const params: GestureParams = {
-            element,
-            initialPose: pose.initialPose,
-            startGlobalPoints: pose.startGlobalPoints,
-            currentGlobalPoints: globalPoints
-        }
-
-        // 单指拖拽优先，双指支持缩放
-        keepTouchesRelative(params, {
-            enableMove: true,
-            enableScale: true,
-            enableRotate: false,
-            singleFingerPriority: ['drag', 'scale']
-        })
-    },
-
-    onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
-        element.style.opacity = '1'
-        element.style.zIndex = 'auto'
-        log.info(`单指拖拽优先结束 - Item1，持续时间: ${duration || 0}ms`)
-    }
-})
-
-const drag2 = new Drag(item2, {
-    onDragStart: (element, localPoints, globalPoints) => {
-        element.style.opacity = '0.8'
-        element.style.zIndex = '1000'
-
-        log.info(`单指缩放优先开始 - Item2，触点数: ${localPoints.length}`)
-        return {
-          initialPose: getPoseFromElement(element),
-          startLocalPoints: localPoints,
-          startGlobalPoints: globalPoints
-        }
-    },
-
-    onDragMove: (element, _, globalPoints, pose) => {
-        if (!pose) return
-
-        const params: GestureParams = {
-            element,
-            initialPose: pose.initialPose,
-            startGlobalPoints: pose.startGlobalPoints,
-            currentGlobalPoints: globalPoints
-        }
-
-        // 单指缩放优先，双指支持旋转
-        keepTouchesRelative(params, {
-            enableMove: false,
-            enableScale: true,
-            enableRotate: true,
-            singleFingerPriority: ['scale', 'rotate']
-        })
-    },
-
-    onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
-        element.style.opacity = '1'
-        element.style.zIndex = 'auto'
-        log.info(`单指缩放优先结束 - Item2，持续时间: ${duration || 0}ms`)
-    }
-})
 
 // const drag3 = new Drag(item3, {
 //     onDragStart: (element, localPoints, globalPoints) => {
@@ -156,7 +71,6 @@ const drag2 = new Drag(item2, {
 //     onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
 //         element.style.opacity = '1'
 //         element.style.zIndex = 'auto'
-//         console.log(`单指旋转优先结束 - Item3，持续时间: ${duration || 0}ms`)
 //     }
 // })
 
@@ -186,33 +100,15 @@ const initializeItemPositions = () => {
 // Initialize item positions when page loads
 initializeItemPositions()
 
-// 创建item3的DragBase实例 - 惯性拖拽
-const drag3 = new Scale(item3)
+new Rotate(item1)
 
-const drag4 = new DragBase(item4)
-let startPose = getPoseFromElement(item4)
-drag4.addEventListener(DragOperationType.Start, (fingers) => {
-    log.info('drag4 start', fingers)
-    startPose = getPoseFromElement(item4)
+new Scale(item2)
+
+new Drag(item3, {
+  inertial: true
 })
-drag4.addEventListener(DragOperationType.Move, (fingers) => {
-    log.info('drag4 move', fingers)
-    // 移动item4
-    const finger = fingers[0]
-    if (finger) {
-        const start: FingerPathItem | undefined = finger.getPath(FingerOperationType.Start)[0]
-        const current: FingerPathItem | undefined = finger.getLastOperation()
-        if (current && start) {
-            const moveX = current.point.x - start.point.x
-            const moveY = current.point.y - start.point.y
-            item4.style.left = `${parseFloat(startPose.style.left || '0') + moveX}px`
-            item4.style.top = `${parseFloat(startPose.style.top || '0') + moveY}px`
-        }
-    }
-})
-drag4.addEventListener(DragOperationType.End, (fingers) => {
-    log.info('drag4 end', fingers)
-})
+
+new Drag(item4)
 
 log.info('多手势应用初始化完成:')
 log.info('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')

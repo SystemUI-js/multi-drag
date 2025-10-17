@@ -1,11 +1,9 @@
-import log from 'loglevel';
 import { DragBase, DragOperationType, Options, Pose } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash';
 import { Point } from '../utils/mathUtils';
 
 export class Rotate extends DragBase {
-    private isDragComplete = false
     private startGlobalCenter: Point | null = null
     private lastPose: Pose | null = null
     constructor(element: HTMLElement, options?: Options) {
@@ -13,6 +11,8 @@ export class Rotate extends DragBase {
         this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
+        this.addEventListener(DragOperationType.Inertial, this.handleMove)
+        this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
         this.setStartGlobalCenter()
     }
     private setStartGlobalCenter() {
@@ -22,14 +22,11 @@ export class Rotate extends DragBase {
             y: rect.top + rect.height / 2,
         }
     }
-    handleStart = (fingers: Finger[]) => {
-        log.info('handleStart', fingers.length)
-        this.isDragComplete = false
+    handleStart = () => {
         this.setStartGlobalCenter()
     }
     handleMove = (fingers: Finger[]) => {
-        log.info('handleMove', fingers.length)
-        if (this.isDragComplete) {
+        if (this.currentOperationType !== DragOperationType.Inertial && this.currentOperationType !== DragOperationType.Move) {
             return
         }
         const initialPose = cloneDeep(this.initialPose || this.getPose(this.element))
@@ -46,7 +43,7 @@ export class Rotate extends DragBase {
     getAngleBySingleFingers(finger: Finger): number {
         const center = this.startGlobalCenter
         if (!center) {
-            return 0
+            return 1
         }
         const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
         const currentPoint = finger.getLastOperation(FingerOperationType.Move)?.point
@@ -58,21 +55,20 @@ export class Rotate extends DragBase {
                 center
             )
         }
-        return 0
+        return 1
     }
     getAngleByTwoPoints(startPoint1: Point, startPoint2: Point, currentPoint1: Point, currentPoint2: Point): number {
         const startVector = { y: startPoint2.y - startPoint1.y, x: startPoint2.x - startPoint1.x }
         const currentVector = { y: currentPoint2.y - currentPoint1.y, x: currentPoint2.x - currentPoint1.x }
         // 计算向量夹角
         const angle = Math.atan2(currentVector.y, currentVector.x) - Math.atan2(startVector.y, startVector.x)
-        console.log(angle)
         return angle * 180 / Math.PI
     }
     getAngleByTwoFingers(fingers: Finger[], _pose: Pose): number {
         const finger1 = fingers[0]
         const finger2 = fingers[1]
         if (!finger1 || !finger2) {
-            return 0
+            return 1
         }
 
         const startPoint1 = finger1.getLastOperation(FingerOperationType.Start)?.point
@@ -87,14 +83,16 @@ export class Rotate extends DragBase {
                 currentPoint2
             )
         }
-        return 0
+        return 1
     }
-    handleEnd = (fingers: Finger[]) => {
-        log.info('handleEnd', fingers.length)
+    handleEnd = () => {
         if (this.lastPose && this.initialPose) {
             this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.End)
         }
-        // 目前设定为1指完成，就停止setPose
-        this.isDragComplete = true
+    }
+    handleInertialEnd = () => {
+        if (this.lastPose && this.initialPose) {
+            this.setPose(this.element, this.lastPose, this.initialPose, DragOperationType.InertialEnd)
+        }
     }
 }

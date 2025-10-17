@@ -1,5 +1,4 @@
-import log from 'loglevel'
-import { Point, ReadonlyPoint } from '../utils/mathUtils'
+import { ReadonlyPoint } from '../utils/mathUtils'
 import { Finger, FingerOperationType } from './finger'
 
 export interface Options {
@@ -16,6 +15,8 @@ export enum DragOperationType {
     Start = 'start',
     Move = 'move',
     End = 'end',
+    Inertial = 'inertial',
+    InertialEnd = 'inertialEnd',
     AllEnd = 'allEnd',
 }
 
@@ -51,7 +52,6 @@ export function defaultSetPose(element: HTMLElement, pose: Pose, initialPose: Po
     }
     if (pose.scale !== undefined) {
         element.style.transform += ` scale(${pose.scale})`
-        console.log('setPose', element.style.transform)
     }
     if (pose.width !== initialPose.width || pose.height !== initialPose.height) {
         element.style.width = `${pose.width}px`
@@ -62,19 +62,20 @@ export function defaultSetPose(element: HTMLElement, pose: Pose, initialPose: Po
 export class DragBase {
     private fingers: Finger[] = []
     private events: Map<DragOperationType, ((fingers: Finger[]) => void)[]> = new Map()
-    private currentOperationType: DragOperationType = DragOperationType.End
+    protected currentOperationType: DragOperationType = DragOperationType.End
     protected initialPose: Pose
     constructor(protected element: HTMLElement, protected options?: Options) {
         this.initialPose = this.options?.getPose?.(this.element) || defaultGetPose(this.element)
-        this._handleMouseDown = this.handleMouseDown.bind(this)
-        this._handleTouchStart = this.handleTouchStart.bind(this)
-        element.addEventListener('mousedown', this._handleMouseDown)
-        element.addEventListener('touchstart', this._handleTouchStart)
+        element.addEventListener('mousedown', this.handleMouseDown)
+        element.addEventListener('touchstart', this.handleTouchStart)
     }
-    // 预留
-    private _handleMouseDown = (e: MouseEvent) => {}
-    private _handleTouchStart = (e: TouchEvent) => {}
     private handleMouseDown = (e: MouseEvent) => {
+        if (this.currentOperationType === DragOperationType.Inertial) {
+            // 在惯性阶段，再次按下，需要打断，先把所有finger kill掉
+            this.fingers.forEach(finger => {
+                finger.destroy()
+            })
+        }
         const maxFingerCount = this.options?.maxFingerCount ?? 1
         if (maxFingerCount !== -1 && this.fingers.length >= maxFingerCount) {
             return
@@ -83,35 +84,44 @@ export class DragBase {
             return
         }
         this.initialPose = this.options?.getPose?.(this.element) || defaultGetPose(this.element)
-        const finger = new Finger(this.element, e)
+        const finger = new Finger(e, {
+            inertial: this.options?.inertial ?? false,
+            onDestroy: (f) => {
+                this.cleanFingers(f)
+            },
+        })
         this.fingers.push(finger)
         finger.addEventListener(FingerOperationType.Move, this.handleFingerMove)
-        if (this.options?.inertial) {
-            finger.addEventListener(FingerOperationType.Inertial, this.handleFingerMoveComplete)
-        } else {
-            finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
-        }
+        finger.addEventListener(FingerOperationType.Inertial, this.handleFingerInertialMove)
+        finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
+        finger.addEventListener(FingerOperationType.InertialEnd, this.handleFingerInertialComplete)
         this.currentOperationType = DragOperationType.Start
         this.trigger(DragOperationType.Start)
     }
     private handleTouchStart = (e: TouchEvent) => {
+        if (this.currentOperationType === DragOperationType.Inertial) {
+            // 在惯性阶段，再次按下，需要打断，先把所有finger kill掉
+            this.fingers.forEach(finger => {
+                finger.destroy()
+            })
+        }
         e.preventDefault()
         const optionsMaxFingerCount = this.options?.maxFingerCount ?? 1
         const maxFingerCount = optionsMaxFingerCount !== -1 ? optionsMaxFingerCount : Infinity
-        const fingers = Finger.createFingersByEvent(this.element, e)
-        log.info('touch start in base', fingers)
+        const fingers = Finger.createFingersByEvent(e, {
+            inertial: this.options?.inertial ?? false,
+            onDestroy: (f) => {
+                this.cleanFingers(f)
+            },
+        })
         const validFingers = fingers.filter(finger => !finger.getIsDestroyed())
-        log.info('touch start valid fingers', validFingers)
         this.initialPose = this.options?.getPose?.(this.element) || defaultGetPose(this.element)
         this.fingers.push(...validFingers.slice(0, maxFingerCount))
-        log.info('touch start valid fingers after slice', this.fingers)
         validFingers.forEach(finger => {
             finger.addEventListener(FingerOperationType.Move, this.handleFingerMove)
-            if (this.options?.inertial) {
-                finger.addEventListener(FingerOperationType.Inertial, this.handleFingerMoveComplete)
-            } else {
-                finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
-            }
+            finger.addEventListener(FingerOperationType.Inertial, this.handleFingerInertialMove)
+            finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
+            finger.addEventListener(FingerOperationType.InertialEnd, this.handleFingerInertialComplete)
         })
         this.trigger(DragOperationType.Start)
     }
@@ -119,17 +129,17 @@ export class DragBase {
         this.currentOperationType = DragOperationType.Move
         this.trigger(DragOperationType.Move)
     }
+    private handleFingerInertialMove = () => {
+        this.currentOperationType = DragOperationType.Inertial
+        this.trigger(DragOperationType.Inertial)
+    }
     private handleFingerMoveComplete = () => {
-        console.log('finger complete')
-        this.cleanFingers().then(() => {
-            this.trigger(DragOperationType.End)
-            if (this.fingers.length === 0) {
-                this.currentOperationType = DragOperationType.AllEnd
-                this.trigger(DragOperationType.AllEnd)
-            } else {
-                this.currentOperationType = DragOperationType.End
-            }
-        })
+        this.trigger(DragOperationType.End)
+        this.currentOperationType = DragOperationType.End
+    }
+    private handleFingerInertialComplete = () => {
+        this.trigger(DragOperationType.InertialEnd)
+        this.currentOperationType = DragOperationType.InertialEnd
     }
     protected getPose(element: HTMLElement): Pose {
         if (this.options?.getPose) {
@@ -174,19 +184,11 @@ export class DragBase {
     getCurrentOperationType() {
         return this.currentOperationType
     }
-    private cleanFingers = () => {
-        return new Promise(resolve => {
-            // 因为是先执行trigger再destroy的，所以要等finger destroy之后再检测
-            setTimeout(() => {
-                for (const finger of [...this.fingers]) {
-                    if (finger.getIsDestroyed()) {
-                        this.fingers.splice(this.fingers.indexOf(finger), 1)
-                        console.log('cleanFingers', finger)
-                        // FIXME: 两只手先后触摸，然后都抬起，这里只执行了一次
-                    }
-                }
-                resolve(null)
-            }, 0)
-        })
+    private cleanFingers = (f: Finger) => {
+        this.fingers.splice(this.fingers.indexOf(f), 1)
+        if (this.fingers.length === 0) {
+            this.currentOperationType = DragOperationType.AllEnd
+            this.trigger(DragOperationType.AllEnd)
+        }
     }
 }
