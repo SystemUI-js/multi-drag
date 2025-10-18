@@ -105,7 +105,7 @@ new Drag(item3, {
   inertial: true
 })
 
-new Mixin(item4, {}, [MixinType.Rotate, MixinType.Scale, MixinType.Drag])
+new Mixin(item4, {}, [MixinType.Drag, MixinType.Rotate, MixinType.Scale])
 
 log.info('多手势应用初始化完成:')
 log.info('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')

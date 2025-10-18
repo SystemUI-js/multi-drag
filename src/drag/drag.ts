@@ -1,22 +1,29 @@
 import { Point } from '../utils/mathUtils';
-import { DragBase, DragOperationType, Options, Pose } from './base';
+import { DragBase, DragOperationType, Options } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash'
 
 export class Drag extends DragBase {
+    private initialPosition: Point = { x: 0, y: 0 }
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: -1 })
-        // this.addEventListener(DragOperationType.Start, this.handleStart)
+        this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
         this.addEventListener(DragOperationType.Inertial, this.handleMove)
         this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
     }
+    private handleStart = (fingers: Finger[]) => {
+        if (!fingers.length) {
+            return
+        }
+        const initialPose = cloneDeep(this.getPose(this.element))
+        this.initialPosition = initialPose.position
+    }
     handleMove = (fingers: Finger[]) => {
         if (this.currentOperationType !== DragOperationType.Move && this.currentOperationType !== DragOperationType.Inertial) {
             return
         }
-        const initialPose = cloneDeep(this.initialPose || this.getPose(this.element))
         if (!fingers.length) {
             return
         }
@@ -32,8 +39,9 @@ export class Drag extends DragBase {
             }
             return null
         }).filter(item => item !== null) as Point[]
-        let newPositionX = initialPose.position.x
-        let newPositionY = initialPose.position.y
+        const initialPosition = this.initialPosition
+        let newPositionX = initialPosition.x
+        let newPositionY = initialPosition.y
         validFingerMovements.forEach(item => {
             newPositionX += item.x / validFingerMovements.length
             newPositionY += item.y / validFingerMovements.length

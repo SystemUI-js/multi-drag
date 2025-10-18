@@ -1,27 +1,33 @@
-import { DragBase, DragOperationType, Options, Pose } from './base';
+import { DragBase, DragOperationType, Options } from './base';
 import { Finger, FingerOperationType } from './finger';
-import { cloneDeep } from 'lodash';
 import { Point } from '../utils/mathUtils';
 
 export class Rotate extends DragBase {
+    private initialRotation?: number
     constructor(element: HTMLElement, options?: Options) {
         super(element, { ...options, maxFingerCount: 2 })
-        // this.addEventListener(DragOperationType.Start, this.handleStart)
+        this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
         this.addEventListener(DragOperationType.Inertial, this.handleMove)
         this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
     }
+    handleStart = () => {
+        if (this.currentOperationType !== DragOperationType.Start) {
+            return
+        }
+        const initialPose = this.getPose(this.element)
+        this.initialRotation = initialPose.rotation || 0
+    }
     handleMove = (fingers: Finger[]) => {
         if (this.currentOperationType !== DragOperationType.Inertial && this.currentOperationType !== DragOperationType.Move) {
             return
         }
-        const initialPose = cloneDeep(this.initialPose || this.getPose(this.element))
-        const initialRotation = initialPose.rotation || 0
-        if (!fingers.length || !initialPose) {
+        const initialRotation = this.initialRotation || 0
+        if (!fingers.length) {
             return
         }
-        const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers, initialPose)
+        const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers)
         const newPose = { rotation: initialRotation + angle }
         this.setPose(this.element, newPose, DragOperationType.Move)
     }
@@ -53,7 +59,7 @@ export class Rotate extends DragBase {
         const angle = Math.atan2(currentVector.y, currentVector.x) - Math.atan2(startVector.y, startVector.x)
         return angle * 180 / Math.PI
     }
-    getAngleByTwoFingers(fingers: Finger[], _pose: Pose): number {
+    getAngleByTwoFingers(fingers: Finger[]): number {
         const finger1 = fingers[0]
         const finger2 = fingers[1]
         if (!finger1 || !finger2) {

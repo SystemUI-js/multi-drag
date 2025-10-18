@@ -6,6 +6,9 @@ export interface Options {
     // 支持最大的手指数量，默认1
     maxFingerCount?: number
     inertial?: boolean
+    // 被动模式，默认false
+    // 被动模式下，不主动监听元素事件，而是外部调用trigger方法触发事件
+    passive?: boolean
     getPose?: (element: HTMLElement) => Pose
     setPose?: (element: HTMLElement, pose: Partial<Pose>) => void
     // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
@@ -79,8 +82,10 @@ export class DragBase {
     protected initialPose: Pose
     constructor(protected element: HTMLElement, protected options?: Options) {
         this.initialPose = this.options?.getPose?.(this.element) || defaultGetPose(this.element)
-        element.addEventListener('mousedown', this.handleMouseDown)
-        element.addEventListener('touchstart', this.handleTouchStart)
+        if (!this.options || !this.options.passive) {
+            element.addEventListener('mousedown', this.handleMouseDown)
+            element.addEventListener('touchstart', this.handleTouchStart)
+        }
     }
     private handleMouseDown = (e: MouseEvent) => {
         if (this.currentOperationType === DragOperationType.Inertial) {
@@ -205,9 +210,12 @@ export class DragBase {
             this.events.set(type, callbacks)
         }
     }
-    private trigger(type: DragOperationType) {
+    setCurrentOperationType(type: DragOperationType) {
+        this.currentOperationType = type
+    }
+    trigger(type: DragOperationType, fingers?: Finger[]) {
         const callbacks = this.events.get(type) ?? []
-        callbacks.forEach(callback => callback(this.fingers))
+        callbacks.forEach(callback => callback(fingers || this.fingers))
     }
     getCurrentOperationType() {
         return this.currentOperationType
