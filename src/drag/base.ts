@@ -100,14 +100,14 @@ export class DragBase {
     private events: Map<DragOperationType, ((fingers: Finger[]) => void)[]> = new Map()
     protected currentOperationType: DragOperationType = DragOperationType.End
     private isEnabled: boolean = true
+    private isPassive: boolean = false
     constructor(protected element: HTMLElement, protected options?: Options) {
-        if (!this.options || !this.options.passive) {
-            element.addEventListener('mousedown', this.handleMouseDown)
-            element.addEventListener('touchstart', this.handleTouchStart)
-        }
+        this.isPassive = !!(options?.passive)
+        element.addEventListener('mousedown', this.handleMouseDown)
+        element.addEventListener('touchstart', this.handleTouchStart)
     }
     private handleMouseDown = (e: MouseEvent) => {
-        if (!this.isEnabled) {
+        if (!this.isEnabled || this.isPassive) {
             return
         }
         const maxFingerCount = this.options?.maxFingerCount ?? 1
@@ -136,7 +136,7 @@ export class DragBase {
         log.info(`[DragBase] handleMouseDown, fingers length: ${this.fingers.length}`)
     }
     private handleTouchStart = (e: TouchEvent) => {
-        if (!this.isEnabled) {
+        if (!this.isEnabled || this.isPassive) {
             return
         }
         e.preventDefault()
@@ -346,6 +346,9 @@ export class DragBase {
         this.currentOperationType = type
     }
     trigger(type: DragOperationType, fingers?: Finger[]) {
+        if (!this.isEnabled) {
+            return
+        }
         const callbacks = this.events.get(type) ?? []
         callbacks.forEach(callback => callback(fingers || this.fingers))
     }
@@ -364,5 +367,8 @@ export class DragBase {
     }
     setDisabled() {
         this.isEnabled = false
+    }
+    setPassive(passive: boolean = true) {
+        this.isPassive = passive
     }
 }
