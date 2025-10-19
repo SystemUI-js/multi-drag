@@ -99,6 +99,7 @@ export class DragBase {
     private poses: PoseRecord[] = []
     private events: Map<DragOperationType, ((fingers: Finger[]) => void)[]> = new Map()
     protected currentOperationType: DragOperationType = DragOperationType.End
+    private isEnabled: boolean = true
     constructor(protected element: HTMLElement, protected options?: Options) {
         if (!this.options || !this.options.passive) {
             element.addEventListener('mousedown', this.handleMouseDown)
@@ -106,6 +107,9 @@ export class DragBase {
         }
     }
     private handleMouseDown = (e: MouseEvent) => {
+        if (!this.isEnabled) {
+            return
+        }
         const maxFingerCount = this.options?.maxFingerCount ?? 1
         if (maxFingerCount !== -1 && this.fingers.length >= maxFingerCount) {
             return
@@ -132,6 +136,9 @@ export class DragBase {
         log.info(`[DragBase] handleMouseDown, fingers length: ${this.fingers.length}`)
     }
     private handleTouchStart = (e: TouchEvent) => {
+        if (!this.isEnabled) {
+            return
+        }
         e.preventDefault()
         const optionsMaxFingerCount = this.options?.maxFingerCount ?? 1
         const maxFingerCount = optionsMaxFingerCount !== -1 ? optionsMaxFingerCount : Infinity
@@ -351,5 +358,11 @@ export class DragBase {
             this.currentOperationType = DragOperationType.AllEnd
             this.trigger(DragOperationType.AllEnd)
         }
+    }
+    setEnabled(enabled: boolean = true) {
+        this.isEnabled = enabled
+    }
+    setDisabled() {
+        this.isEnabled = false
     }
 }
