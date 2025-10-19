@@ -1,7 +1,9 @@
 import '../style.css'
-import { Drag, Scale, Rotate, Mixin, MixinType } from '..'
+import { Drag, DragBase, Mixin, MixinType } from '..'
 import VConsole from 'vconsole';
 import log from 'loglevel'
+import { Finger, FingerOperationType } from '../drag/finger';
+import { DragOperationType } from '../drag/base';
 
 if (process.env.NODE_ENV === 'development') {
   log.setLevel('trace');
@@ -18,10 +20,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     </div>
     <div id="drag-zone">
       <div id="drag-container">
-        <div class="draggable-item" id="item1">Item 1 (单指拖拽优先)</div>
-        <div class="draggable-item" id="item2">Item 2 (单指缩放优先)</div>
-        <div class="draggable-item" id="item3">Item 3 (单指旋转优先)</div>
-        <div class="draggable-item" id="item4">Item 4 (惯性拖拽)</div>
+        <div class="draggable-item" id="item1">单指拖拽，双指拖拽+缩放</div>
+        <div class="draggable-item" id="item2">缩放+旋转</div>
+        <div class="draggable-item" id="item3">单指拖拽，<br>双指拖拽+缩放+旋转</div>
+        <div class="draggable-item" id="item4">惯性拖拽</div>
       </div>
     </div>
   </div>
@@ -73,43 +75,78 @@ const item4 = document.getElementById('item4') as HTMLElement
 
 // Initialize positions for the items
 const initializeItemPositions = () => {
-	const items = [item1, item2, item3, item4]
+  const items = [item1, item2, item3, item4]
 
-	// Define initial positions for each item (relative to drag-container)
-	const initialPositions = [
-		{ left: 24, top: 10 },   // Item 1 - top left area
-		{ left: 24, top: 110 },  // Item 2 - center area
-		{ left: 24, top: 210 },  // Item 3 - bottom area
-		{ left: 160, top: 110 }  // Item 4 - right center area
-	]
+  // Define initial positions for each item (relative to drag-container)
+  const initialPositions = [
+    { left: 24, top: 10 },   // Item 1 - top left area
+    { left: 24, top: 110 },  // Item 2 - center area
+    { left: 24, top: 210 },  // Item 3 - bottom area
+    { left: 24, top: 310 }  // Item 4 - right center area
+  ]
 
-	items.forEach((item, index) => {
-		if (item && initialPositions[index]) {
-			item.style.position = 'absolute'
-			item.style.left = `${initialPositions[index].left}px`
-			item.style.top = `${initialPositions[index].top}px`
-			// 确保元素可以进行 transform 操作
-			item.style.transformOrigin = 'center'
-		}
-	})
+  items.forEach((item, index) => {
+    if (item && initialPositions[index]) {
+      item.style.position = 'absolute'
+      item.style.left = `${initialPositions[index].left}px`
+      item.style.top = `${initialPositions[index].top}px`
+      // 确保元素可以进行 transform 操作
+      item.style.transformOrigin = 'center'
+    }
+  })
 }
 
 // Initialize item positions when page loads
 initializeItemPositions()
 
-new Rotate(item1)
+const drag1 = new Mixin(item1, {}, [MixinType.Drag, MixinType.Scale])
 
-new Scale(item2)
+const drag2 = new Mixin(item2, {}, [MixinType.Rotate, MixinType.Scale])
 
-new Drag(item3, {
+const drag3 = new Mixin(item3, {}, [MixinType.Drag, MixinType.Rotate, MixinType.Scale])
+
+const drag4 = new Drag(item4, {
   inertial: true
 })
 
-new Mixin(item4, {}, [MixinType.Drag, MixinType.Rotate, MixinType.Scale])
+printFingerByDragBase(drag1)
+printFingerByDragBase(drag2)
+printFingerByDragBase(drag3)
+printFingerByDragBase(drag4)
 
-log.info('多手势应用初始化完成:')
-log.info('- Item1: 单指拖拽优先，双指支持缩放 - singleFingerPriority: ["drag", "scale"]')
-log.info('- Item2: 单指缩放优先，双指支持旋转 - singleFingerPriority: ["scale", "rotate"]')
-log.info('- Item3: 单指旋转优先，双指支持拖拽 - singleFingerPriority: ["rotate", "drag"]')
-log.info('- Item4: 惯性拖拽 - singleFingerPriority: []')
-log.info('所有功能基于 keepTouchesRelative 函数的优先级配置实现，提供灵活的单指/多指手势组合')
+function printFingerByDragBase(d: DragBase) {
+  const container = document.createElement('div')
+  document.body.appendChild(container)
+  d.addEventListener(DragOperationType.Start, (fingers) => {
+    container.innerHTML = ''
+    for (const finger of fingers) {
+      printFinger(finger, container, FingerOperationType.Start)
+    }
+  })
+  d.addEventListener(DragOperationType.Move, (fingers) => {
+    container.innerHTML = ''
+    for (const finger of fingers) {
+      printFinger(finger, container, FingerOperationType.Move)
+    }
+  })
+  d.addEventListener(DragOperationType.End, () => {
+    container.innerHTML = ''
+  })
+}
+
+function printFinger(finger: Finger, container: HTMLDivElement, type: FingerOperationType) {
+  const point = finger.getLastOperation(type)?.point
+  const fingerDiv = document.createElement('div')
+  fingerDiv.style.position = 'fixed'
+  fingerDiv.style.left = `${point?.x || 0}px` || '0px'
+  fingerDiv.style.top = `${point?.y || 0}px` || '0px'
+  fingerDiv.style.width = '70px'
+  fingerDiv.style.height = '70px'
+  fingerDiv.style.zIndex = '1000'
+  fingerDiv.style.transform = 'translate(-50%, -50%)'
+  fingerDiv.style.borderRadius = '50%'
+  // 加个阴影
+  fingerDiv.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)'
+  fingerDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'
+  container.appendChild(fingerDiv)
+}

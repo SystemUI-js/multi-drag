@@ -9,8 +9,6 @@ export class Scale extends DragBase {
         this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
-        this.addEventListener(DragOperationType.Inertial, this.handleMove)
-        this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
         this.setStartScale()
     }
     private setStartScale() {
@@ -31,7 +29,7 @@ export class Scale extends DragBase {
             return
         }
         const scale = fingers.length === 1 ? this.getScaleBySingleFingers(fingers[0]) : this.getScaleByTwoFingers(fingers)
-        this.setPose(this.element, { scale: this.startScale * scale })
+        this.setPose(this.element, { scale: this.startScale * scale }, DragOperationType.Move)
     }
     getScaleBySingleFingers(finger: Finger): number {
         const currentPose = this.getGlobalPose(this.element)
@@ -40,7 +38,7 @@ export class Scale extends DragBase {
             y: currentPose.position.y + currentPose.height / 2,
         }
         const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
-        const currentPoint = finger.getLastOperation(FingerOperationType.Inertial)?.point || finger.getLastOperation(FingerOperationType.Move)?.point
+        const currentPoint = finger.getLastOperation(FingerOperationType.Move)?.point
         if (startPoint && currentPoint) {
             return this.getScaleByTwoPoints(
                 startPoint,

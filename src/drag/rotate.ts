@@ -9,8 +9,6 @@ export class Rotate extends DragBase {
         this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
-        this.addEventListener(DragOperationType.Inertial, this.handleMove)
-        this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
     }
     handleStart = () => {
         if (this.currentOperationType !== DragOperationType.Start) {
@@ -20,7 +18,7 @@ export class Rotate extends DragBase {
         this.initialRotation = initialPose.rotation || 0
     }
     handleMove = (fingers: Finger[]) => {
-        if (this.currentOperationType !== DragOperationType.Inertial && this.currentOperationType !== DragOperationType.Move) {
+        if (this.currentOperationType !== DragOperationType.Move) {
             return
         }
         const initialRotation = this.initialRotation || 0

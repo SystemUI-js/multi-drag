@@ -10,8 +10,6 @@ export class Drag extends DragBase {
         this.addEventListener(DragOperationType.Start, this.handleStart)
         this.addEventListener(DragOperationType.Move, this.handleMove)
         this.addEventListener(DragOperationType.End, this.handleEnd)
-        this.addEventListener(DragOperationType.Inertial, this.handleMove)
-        this.addEventListener(DragOperationType.InertialEnd, this.handleInertialEnd)
     }
     private handleStart = (fingers: Finger[]) => {
         if (!fingers.length) {
@@ -30,7 +28,7 @@ export class Drag extends DragBase {
         // 找到已经移动了的finger
         const validFingerMovements = fingers.map<Point | null>(finger => {
             const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
-            const currentPoint = finger.getLastOperation(FingerOperationType.Inertial)?.point || finger.getLastOperation(FingerOperationType.Move)?.point
+            const currentPoint = finger.getLastOperation(FingerOperationType.Move)?.point
             if (startPoint && currentPoint) {
                 return {
                     x: currentPoint.x - startPoint.x,
@@ -47,7 +45,7 @@ export class Drag extends DragBase {
             newPositionY += item.y / validFingerMovements.length
         })
         const newPose = { position: { x: newPositionX, y: newPositionY } }
-        this.setPose(this.element, newPose)
+        this.setPose(this.element, newPose, DragOperationType.Move)
     }
     handleEnd = () => {
         // if (this.lastPose && this.initialPose) {

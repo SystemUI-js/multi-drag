@@ -1,23 +1,16 @@
 import log from 'loglevel';
 import { Point } from '../utils/mathUtils'
 
-const MIN_INERTIAL_SPEED = 0.1
-
 export enum FingerOperationType {
     Start = 'start',
     Move = 'move',
     End = 'end',
-    // 惯性运动产生的path
-    Inertial = 'inertial',
-    InertialEnd = 'inertialEnd',
 }
 
 const OPERATION_STAGE = [
     FingerOperationType.Start,
     FingerOperationType.Move,
     FingerOperationType.End,
-    FingerOperationType.Inertial,
-    FingerOperationType.InertialEnd,
 ]
 
 export interface FingerPathItem {
@@ -36,15 +29,7 @@ export interface Options {
     onDestroy?: (finger: Finger) => void
 }
 
-// S=vt-0.5at^2
-function getInertialTimingFunction(initSpeed: number, deceleration: number) {
-    return (timeSpend: number) => {
-        const distance = initSpeed * timeSpend - 0.5 * deceleration * timeSpend ** 2
-        return distance
-    }
-}
-
-// Finger类从mouseDown（或touchStart等）事件发生时产生，在抬起或惯性结束后销毁
+// Finger类从mouseDown（或touchStart等）事件发生时产生，在抬起后销毁
 
 export class Finger {
     private path: FingerPathItem[] = []
@@ -106,7 +91,6 @@ export class Finger {
         document.addEventListener('mouseup', this.mouseHandlers.handleDocumentEnd)
         document.addEventListener('touchmove', this.touchHandlers.handleDocumentTouchMove)
         document.addEventListener('touchend', this.touchHandlers.handleDocumentTouchEnd)
-        this.printFinger(FingerOperationType.Start)
     }
     private mouseHandlers: { [handlerName: string]: (e: MouseEvent) => void } = {}
     private touchHandlers: { [handlerName: string]: (e: TouchEvent) => void } = {}
@@ -163,7 +147,6 @@ export class Finger {
         const moveItem = this.pushNewPathItem({ x: touch.clientX, y: touch.clientY }, touch, FingerOperationType.Move)
         this.triggerEvent(FingerOperationType.Move, moveItem)
         this.isMoving = true
-        this.printFinger(FingerOperationType.Move)
     }
     private handleDocumentEnd = (e: MouseEvent) => {
         if (this.isDestroyed) {
@@ -172,11 +155,7 @@ export class Finger {
         const endItem = this.pushNewPathItem({ x: e.clientX, y: e.clientY }, e, FingerOperationType.End)
         console.log('[Finger] mouse END, ', this.path)
         this.triggerEvent(FingerOperationType.End, endItem)
-        if (this.options?.inertial) {
-            this.handleInertial()
-        } else {
-            this.destroy()
-        }
+        this.destroy()
     }
     private handleDocumentTouchEnd = (e: TouchEvent) => {
         if (this.isDestroyed) {
@@ -190,81 +169,7 @@ export class Finger {
         const endItem = this.pushNewPathItem({ x: touch.clientX, y: touch.clientY }, touch, FingerOperationType.End)
         log.info('[Finger] touch END, ', this.path)
         this.triggerEvent(FingerOperationType.End, endItem)
-        if (this.options?.inertial) {
-            this.handleInertial()
-        } else {
-            this.destroy()
-        }
-    }
-    private handleInertial = () => {
-        // 本函数时间单位均为毫秒
-        if (this.isDestroyed || !this.isAfterStage(FingerOperationType.End)) {
-            return
-        }
-        // 先随手往上平移100px，1s
-        const startTime = Date.now()
-        const moveList = this.getPath(FingerOperationType.Move)
-        const beforeLastMove = moveList[moveList.length - 2]
-        const lastMove = moveList[moveList.length - 1]
-        if (!lastMove || !beforeLastMove) {
-            this.destroy()
-            return
-        }
-        const duration = lastMove.timestamp - beforeLastMove.timestamp
-        const distance = Math.sqrt(Math.pow(lastMove.point.x - beforeLastMove.point.x, 2) + Math.pow(lastMove.point.y - beforeLastMove.point.y, 2))
-        // 速度，单位：px/ms
-        const speed = distance / duration
-        if (speed < MIN_INERTIAL_SPEED) {
-            this.destroy()
-            return
-        }
-        // 减速度
-        const deceleration = 0.005
-        // 移动时间，速度除以减速度
-        const movementDuration = speed / deceleration
-        const timingFunction = getInertialTimingFunction(speed, deceleration)
-        // 单位向量
-        const directionVector = {
-            x: (lastMove.point.x - beforeLastMove.point.x) / distance,
-            y: (lastMove.point.y - beforeLastMove.point.y) / distance
-        }
-        log.info('[Finger] inertial, movementDuration: ', movementDuration, 'ms directionVector: ', directionVector, ' speed: ', speed, 'px/ms deceleration: ', deceleration, ' duration: ', duration, 'ms')
-        const job = () => {
-            if (this.isDestroyed) {
-                return
-            }
-            const timeSpend = Date.now() - startTime
-            const d = timingFunction(timeSpend)
-            if (timeSpend > movementDuration) {
-                const finalD = timingFunction(movementDuration)
-                const offsetVector = {
-                    x: directionVector.x * finalD,
-                    y: directionVector.y * finalD
-                }
-                // 时间超出则直接跳到结果
-                const newPoint = {
-                    x: lastMove.point.x + offsetVector.x,
-                    y: lastMove.point.y + offsetVector.y
-                }
-                const inertialItem = this.pushNewPathItem(newPoint, lastMove.event, FingerOperationType.InertialEnd)
-                console.log('[Finger] inertial END, ', this.path)
-                this.triggerEvent(FingerOperationType.InertialEnd, inertialItem)
-                this.destroy()
-                return
-            }
-            const offsetVector = {
-                x: directionVector.x * d,
-                y: directionVector.y * d
-            }
-            const newPoint = {
-                x: lastMove.point.x + offsetVector.x,
-                y: lastMove.point.y + offsetVector.y
-            }
-            const inertialItem = this.pushNewPathItem(newPoint, lastMove.event, FingerOperationType.Inertial)
-            this.triggerEvent(FingerOperationType.Inertial, inertialItem)
-            requestAnimationFrame(job)
-        }
-        job()
+        this.destroy()
     }
     getIsMoving() {
         return this.isMoving
@@ -279,29 +184,6 @@ export class Finger {
         }
         return this.path[this.path.length - 1]
     }
-    printFinger(type: FingerOperationType) {
-        const existContainer = document.querySelector(`.finger-${this.touchId}-${type}`)
-        let container: HTMLDivElement
-        if (existContainer) {
-            container = existContainer as HTMLDivElement
-        } else {
-            container = document.createElement('div')
-            container.className = `finger-${this.touchId}-${type}`
-            document.body.appendChild(container)
-        }
-        const point = this.getLastOperation(type)?.point
-        container.style.position = 'fixed'
-        container.style.left = `${point?.x || 0}px` || '0px'
-        container.style.top = `${point?.y || 0}px` || '0px'
-        container.style.width = '70px'
-        container.style.height = '70px'
-        container.style.zIndex = '1000'
-        container.style.transform = 'translate(-50%, -50%)'
-        container.style.borderRadius = '50%'
-        // 加个阴影
-        container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.3)'
-        container.style.backgroundColor = 'rgba(255, 255, 255, 0.7)'
-    }
     destroy() {
         document.removeEventListener('mousemove', this.mouseHandlers.handleDocumentMove)
         document.removeEventListener('mouseup', this.mouseHandlers.handleDocumentEnd)
@@ -314,9 +196,5 @@ export class Finger {
         }
         this.isDestroyed = true
         this.isMoving = false
-        for (const type of Object.values(FingerOperationType)) {
-            const container = document.querySelector(`.finger-${this.touchId}-${type}`)
-            container && document.body.removeChild(container)
-        }
     }
 }
