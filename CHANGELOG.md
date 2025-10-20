@@ -63,6 +63,16 @@
 - **增加惯性拖动**
   - 增加惯性拖动
 
+
+## [0.2.1] - 2025-10-20
+
+### 新增功能
+- **DragBase增加passive模式的外部设置**
+  - 新增setPassive方法，用于外部设置是否为passive模式
+
+- **DragBase增加enabled模式的外部设置**
+  - 新增setEnabled和setDisabled方法，用于外部设置是否为enabled模式
+
 ## 版本说明
 
 ### 版本号规则
