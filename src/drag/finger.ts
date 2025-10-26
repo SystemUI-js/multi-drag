@@ -45,38 +45,21 @@ export class Finger {
             fingers.push(finger)
         } else if (event instanceof TouchEvent) {
             // 触摸可能有多个手指，每个手指对应一个Finger实例
-            for (const touch of event.changedTouches) {
+            for (const touch of event.touches) {
                 const finger = new Finger(touch, options)
                 fingers.push(finger)
             }
         }
         return fingers
     }
-    static getCenterPoint(fingers: Finger[], type: FingerOperationType = FingerOperationType.Start) {
-        if (!fingers.length) {
-            return { x: 0, y: 0 }
-        }
-        let totalX = 0
-        let totalY = 0
-        fingers.forEach(finger => {
-            // 从后往前找，尽量用最后一个
-            const item = [...finger.path].reverse().find(item => item.type === type)
-            if (item) {
-                totalX += item.point.x
-                totalY += item.point.y
-            }
-        })
-        const centerX = totalX / fingers.length || 0
-        const centerY = totalY / fingers.length || 0
-        return { x: centerX, y: centerY }
-    }
     constructor(event: supportedEvents, private options: Options | undefined = {}) {
         const point = { x: event.clientX, y: event.clientY }
         // 初始事件入path
         const startItem = this.pushNewPathItem(point, event, FingerOperationType.Start)
         this.triggerEvent(FingerOperationType.Start, startItem)
-        if (event instanceof Touch) {
-            this.touchId = event.identifier
+        // Jest不支持Touch，暂时这样处理赋值
+        if (typeof (event as Touch).identifier === 'number') {
+            this.touchId = (event as Touch).identifier
         }
         this.mouseHandlers = {
             handleDocumentMove: this.handleDocumentMove.bind(this),
@@ -161,7 +144,7 @@ export class Finger {
         if (this.isDestroyed) {
             return
         }
-        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId)
+        const touch = [...e.touches].find(t => t.identifier === this.touchId)
         if (!touch) {
             return
         }

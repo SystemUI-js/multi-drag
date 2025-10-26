@@ -1,6 +1,6 @@
 export { Drag } from './drag'
 
-export { DragBase } from './base'
+export { DragBase, defaultGetPose, defaultSetPose } from './base'
 
 export { Rotate } from './rotate'
 

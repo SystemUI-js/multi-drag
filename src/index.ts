@@ -2,31 +2,6 @@
 export * from './drag'
 
 export {
-  type Point
-} from './utils/mathUtils'
-
-export {
-  getPoseFromElement,
-  applyPoseToElement,
-  type ApplyPoseOptions,
-  type Pose
-} from './utils/dragUtils'
-
-// 工具函数导出
-export {
-  MatrixTransforms,
-  MathUtils
-} from './utils/matrixTransforms'
-
-export {
-  MathUtils as MathUtilsClass,
-  evaluate,
-  matrix,
-  multiply,
-  subtract,
-  add,
-  norm,
-  cos,
-  sin,
-  pi
+  type Point,
+  type ReadonlyPoint
 } from './utils/mathUtils'
