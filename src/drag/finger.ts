@@ -45,7 +45,8 @@ export class Finger {
             fingers.push(finger)
         } else if (event instanceof TouchEvent) {
             // 触摸可能有多个手指，每个手指对应一个Finger实例
-            for (const touch of event.touches) {
+            // 因为拖动会找不到touchId，所以这里又改回用changedTouches
+            for (const touch of [...(event.changedTouches.length ? event.changedTouches : event.touches)]) {
                 const finger = new Finger(touch, options)
                 fingers.push(finger)
             }
@@ -123,7 +124,7 @@ export class Finger {
         if (this.isDestroyed || !this.isAfterStage(FingerOperationType.Start)) {
             return
         }
-        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId)
+        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId) || [...e.touches].find(t => t.identifier === this.touchId)
         if (!touch) {
             return
         }
@@ -144,7 +145,8 @@ export class Finger {
         if (this.isDestroyed) {
             return
         }
-        const touch = [...e.touches].find(t => t.identifier === this.touchId)
+        // 因为拖动会找不到touchId，所以这里又改回用changedTouches
+        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId)
         if (!touch) {
             return
         }

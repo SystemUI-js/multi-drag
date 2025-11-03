@@ -23,9 +23,9 @@ describe('[Drag] test', () => {
         const element = createAnElement()
         // 使用Drag类而不是DragBase,因为Drag类实现了实际的拖动逻辑
         new Drag(element)
-        mockTouchMove(element, { x: 60, y: 50 }, { x: 70, y: 50 }, 2)
+        mockTouchMove(element, { x: 60, y: 50 }, { x: 100, y: 50 }, 2)
 
-        // 验证元素向右移动了10px
-        expect(element.style.left).toBe('10px')
+        // 验证元素向右移动了40px
+        expect(element.style.left).toBe('40px')
     })
 })
