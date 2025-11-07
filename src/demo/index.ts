@@ -35,44 +35,6 @@ const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 const item4 = document.getElementById('item4') as HTMLElement
 
-// const drag3 = new Drag(item3, {
-//     onDragStart: (element, localPoints, globalPoints) => {
-//         element.style.opacity = '0.8'
-//         element.style.zIndex = '1000'
-
-//         log.info(`单指旋转优先开始 - Item3，触点数: ${localPoints.length}`)
-//         return {
-//             initialPose: getPoseFromElement(element),
-//             startLocalPoints: localPoints,
-//             startGlobalPoints: globalPoints
-//         }
-//     },
-
-//     onDragMove: (element, _, globalPoints, pose) => {
-//         if (!pose) return
-
-//         const params: GestureParams = {
-//             element,
-//             initialPose: pose.initialPose,
-//             startGlobalPoints: pose.startGlobalPoints,
-//             currentGlobalPoints: globalPoints
-//         }
-
-//         // 单指旋转优先，双指支持拖拽
-//         keepTouchesRelative(params, {
-//             enableMove: true,
-//             enableScale: false,
-//             enableRotate: true,
-//             singleFingerPriority: ['rotate', 'drag']
-//         })
-//     },
-
-//     onDragEnd: (element, _localPoints, _globalPoints, _startPayload, duration?) => {
-//         element.style.opacity = '1'
-//         element.style.zIndex = 'auto'
-//     }
-// })
-
 // Initialize positions for the items
 const initializeItemPositions = () => {
     const items = [item1, item2, item3, item4]
