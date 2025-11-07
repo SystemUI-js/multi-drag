@@ -3,6 +3,11 @@ alwaysApply: false
 ---
 # .cursor/.cursor-rules.yaml
 
+# Editor Configuration Rules
+editor:
+  quotes: single  # Use single quotes for strings
+  indent: 4     # Use 4 spaces for indentation
+
 agents:
   - name: product
     model: "claude-4-sonnet"
