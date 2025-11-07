@@ -145,8 +145,8 @@ export class Finger {
         if (this.isDestroyed) {
             return
         }
-        // 因为拖动会找不到touchId，所以这里又改回用changedTouches
-        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId)
+        // 因为拖动会找不到touchId，所以这里又改回用changedTouches，在特殊情况下changedTouches可能为空
+        const touch = [...e.changedTouches, ...e.touches].find(t => t.identifier === this.touchId)
         if (!touch) {
             return
         }

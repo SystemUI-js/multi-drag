@@ -78,8 +78,8 @@ describe('[DragBase] maxFingerCount', () => {
         const listener = jest.fn()
         dragBase.addEventListener(DragOperationType.Move, listener)
         mockTouchMove(element, { x: 40, y: 40 }, { x: 50, y: 50 }, 2)
-        // 不执行
-        expect(listener).toHaveBeenCalledTimes(0)
+        // 两根手指移动两次
+        expect(listener).toHaveBeenCalledTimes(2)
     })
 })
 
