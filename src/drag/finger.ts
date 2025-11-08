@@ -32,12 +32,14 @@ export interface Options {
 // Finger类从mouseDown（或touchStart等）事件发生时产生，在抬起后销毁
 
 export class Finger {
+    // 手指路径，记录手指移动路径
     private path: FingerPathItem[] = []
     private eventListeners: Map<FingerOperationType, ((item: FingerPathItem) => void)[]> = new Map()
     private isDestroyed = false
-    private touchId = -1
+    private readonly touchId: number | undefined
     private isMoving = false
     private currentOperationType: FingerOperationType = FingerOperationType.Start
+    // 创建手指实例，根据事件类型（鼠标或触摸）创建相应的Finger实例
     static createFingersByEvent(event: MouseEvent | TouchEvent, options?: Options) {
         const fingers: Finger[] = []
         if (event instanceof MouseEvent) {
@@ -137,7 +139,7 @@ export class Finger {
             return
         }
         const endItem = this.pushNewPathItem({ x: e.clientX, y: e.clientY }, e, FingerOperationType.End)
-        console.log('[Finger] mouse END, ', this.path)
+        log.info('[Finger] mouse END, ', this.path)
         this.triggerEvent(FingerOperationType.End, endItem)
         this.destroy()
     }

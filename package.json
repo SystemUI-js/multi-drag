@@ -1,6 +1,23 @@
 {
   "name": "@system-ui-js/multi-drag",
   "version": "0.2.2",
+  "description": "A multi-drag library.",
+  "keywords": [
+    "touch",
+    "multi-drag",
+    "drag",
+    "system-ui"
+  ],
+  "author": "ZX",
+  "license": "MIT",
+  "homepage": "https://systemui-js.github.io/multi-drag/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhangxiao/multi-drag.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zhangxiao/multi-drag/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

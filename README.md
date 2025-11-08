@@ -1,10 +1,12 @@
 # 多指操作库（Multi Drag Project）
 
-一个功能强大、灵活的前端多指拖拽操作库，支持多元素同时拖拽、旋转和缩放，同时提供优雅的API设计和完整的TypeScript类型支持。
+一个功能强大、灵活的前端多指拖拽操作库，支持多元素同时拖拽、旋转和缩放，同时提供完整的TypeScript类型支持。
 
 ## 🎯 核心特性
 
 - **多指协同操作**：支持多个手指同时拖动多个元素，实现复杂交互
+- **鼠标拖拽**：支持鼠标拖拽操作
+- **支持手写笔**：支持手写笔拖拽
 - **丰富的手势支持**：内置拖拽（Drag）、旋转（Rotate）、缩放（Scale）等手势
 - **灵活的组合机制**：通过Mixin模式轻松组合多种手势功能
 - **单指/多指智能区分**：根据触点数量智能切换操作模式
@@ -54,7 +56,7 @@ const element = document.getElementById('my-element') as HTMLElement;
 const drag = new Drag(element);
 
 // 销毁实例（清理事件监听）
-// drag.destroy();
+drag.destroy();
 ```
 
 ### 组合手势示例
@@ -78,7 +80,7 @@ const inertialDrag = new Drag(element, { inertial: true });
 Mixin类是本库的核心特色，允许灵活组合多种手势功能。
 
 ```typescript
-new Mixin(element: HTMLElement, options: Options = {}, mixinTypes: MixinType[]);
+new Mixin(element, options, mixinTypes);
 ```
 
 **参数说明：**
@@ -112,7 +114,7 @@ const mixin = new Mixin(
 提供基本的拖拽功能，支持单指和多指操作。
 
 ```typescript
-new Drag(element: HTMLElement, options?: DragOptions);
+new Drag(element, options);
 ```
 
 **主要选项：**
@@ -124,7 +126,7 @@ new Drag(element: HTMLElement, options?: DragOptions);
 提供旋转功能，可与其他手势组合使用。
 
 ```typescript
-new Rotate(element: HTMLElement, options?: RotateOptions);
+new Rotate(element, options);
 ```
 
 #### Scale 类
@@ -132,7 +134,7 @@ new Rotate(element: HTMLElement, options?: RotateOptions);
 提供缩放功能，可与其他手势组合使用。
 
 ```typescript
-new Scale(element: HTMLElement, options?: ScaleOptions);
+new Scale(element, options);
 ```
 
 ### 3. 工具函数
@@ -153,33 +155,63 @@ function getPoseFromElement(element: HTMLElement): Pose;
 function applyPoseToElement(element: HTMLElement, pose: Pose, options?: ApplyPoseOptions): void;
 ```
 
+### 4. 一些类型
+
+#### Options
+
+Options在每个手势类中使用
+
+```typescript
+
+export interface Options {
+    // 支持最大的手指数量，默认1
+    maxFingerCount?: number
+    // 惯性拖拽，默认false
+    inertial?: boolean
+    // 被动模式，默认false
+    // 被动模式下，不主动监听元素事件，而是外部调用trigger方法触发事件
+    passive?: boolean
+    // 获取当前Pose
+    getPose?: (element: HTMLElement) => Pose
+    // 设置当前Pose
+    setPose?: (element: HTMLElement, pose: Partial<Pose>) => void
+    // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
+    setPoseOnEnd?: (element: HTMLElement, pose: Partial<Pose>) => void
+}
+
+```
+
+#### Pose
+
+Pose就是元素的位姿信息，包含位置、旋转、尺寸等信息。
+
+```typescript
+export interface Pose {
+    readonly position: ReadonlyPoint;
+    readonly rotation?: number;
+    readonly width: number;
+    readonly height: number;
+    readonly scale?: number;
+}
+```
+
 ## 💡 高级用例
 
 ### 自定义事件处理
 
+以Drag实例为例，自定义事件处理逻辑如下：
+
 ```typescript
-const drag = new Drag(element, {
-  onDragStart: (element, fingers) => {
-    // 拖拽开始时的处理逻辑
-    console.log('拖拽开始', fingers.length, '个触点');
-    return {
-      initialPose: getPoseFromElement(element),
-      startTime: Date.now()
-    };
-  },
-  
-  onDragMove: (element, fingers, payload) => {
-    // 拖拽过程中的处理逻辑
-    if (payload) {
-      console.log('移动中，已持续', Date.now() - payload.startTime, 'ms');
-    }
-  },
-  
-  onDragEnd: (element, fingers, payload) => {
-    // 拖拽结束时的处理逻辑
+const drag = new Drag(element);
+drag.addEventListener(DragOperationType.Start, (fingers) => {
+    console.log('当前有', fingers.length, '个触点')
+})
+drag.addEventListener(DragOperationType.Move, (fingers) => {
+    console.log('移动中');
+})
+drag.addEventListener(DragOperationType.End, (fingers) => {
     console.log('拖拽结束');
-  }
-});
+})
 ```
 
 ### 多元素协同操作
@@ -228,25 +260,6 @@ npm run test
 
 # 运行端到端测试
 npm run test:e2e
-```
-
-## 📁 项目结构
-
-```
-src/
-├── drag/           # 核心拖拽相关实现
-│   ├── base.ts     # 基础抽象类
-│   ├── drag.ts     # 拖拽功能
-│   ├── finger.ts   # 手指/指针管理
-│   ├── mixin.ts    # 手势组合器
-│   ├── rotate.ts   # 旋转功能
-│   └── scale.ts    # 缩放功能
-├── utils/          # 工具函数
-│   ├── dragUtils.ts        # 拖拽相关工具
-│   ├── mathUtils.ts        # 数学计算工具
-│   └── matrixTransforms.ts # 矩阵变换工具
-├── demo/           # 演示代码
-└── index.ts        # 主入口文件
 ```
 
 ## 📋 许可证

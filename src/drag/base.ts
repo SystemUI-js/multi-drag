@@ -1,6 +1,6 @@
-import log from 'loglevel'
-import { Point, ReadonlyPoint } from '../utils/mathUtils'
-import { Finger, FingerOperationType } from './finger'
+import log from 'loglevel';
+import { Point, ReadonlyPoint } from '../utils/mathUtils';
+import { Finger, FingerOperationType } from './finger';
 
 const DEFAULT_DISTANCE_DECELERATION = 0.007
 const DEFAULT_ROTATION_DECELERATION = 0.0005
@@ -10,11 +10,14 @@ const MAX_SCALE_CHANGE = 10
 export interface Options {
     // 支持最大的手指数量，默认1
     maxFingerCount?: number
+		// 惯性拖拽，默认false
     inertial?: boolean
     // 被动模式，默认false
     // 被动模式下，不主动监听元素事件，而是外部调用trigger方法触发事件
     passive?: boolean
+		// 获取当前Pose
     getPose?: (element: HTMLElement) => Pose
+		// 设置当前Pose
     setPose?: (element: HTMLElement, pose: Partial<Pose>) => void
     // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
     setPoseOnEnd?: (element: HTMLElement, pose: Partial<Pose>) => void
@@ -29,6 +32,7 @@ export enum DragOperationType {
     AllEnd = 'allEnd',
 }
 
+// 元素的位姿
 export interface Pose {
     readonly position: ReadonlyPoint;
     readonly rotation?: number;
@@ -37,55 +41,64 @@ export interface Pose {
     readonly scale?: number;
 }
 
+// 拖动时的位姿记录
 export interface PoseRecord {
     pose: Pose
     operationType: DragOperationType
     time: number
 }
 
-// S=vt-0.5at^2
+// 惯性时间函数，S=vt-0.5at^2
 function getInertialTimingFunction(initSpeed: number, deceleration: number) {
     return (timeSpend: number) => {
-        const distance = initSpeed * timeSpend - 0.5 * deceleration * timeSpend ** 2
-        return distance
+        return initSpeed * timeSpend - 0.5 * deceleration * timeSpend ** 2
     }
 }
 
+/**
+ * 默认获取位姿的函数
+ * @param element
+ */
 export function defaultGetPose(element: HTMLElement): Pose {
     const width = element.offsetWidth
     const height = element.offsetHeight
-    const scale = Number(element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)\)/)?.[1]) || 1
+    const scale = Number(element.style.transform?.match(/scale\((-?\d+(?:\.\d+)?)\)/)?.[1]) || 1
     return {
         position: {
             x: parseFloat(element.style.left || '0'),
             y: parseFloat(element.style.top || '0'),
         },
-        rotation: Number(element.style.transform?.match(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]) || 0,
+        rotation: Number(element.style.transform?.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/)?.[1]) || 0,
         width: width,
         height: height,
         scale,
     }
 }
 
+/**
+ * 默认设置位姿的函数
+ * @param element
+ * @param pose
+ */
 export function defaultSetPose(element: HTMLElement, pose: Partial<Pose>): void {
     if (Object.hasOwnProperty.call(pose, 'position') && pose.position !== undefined) {
         element.style.left = `${pose.position!.x}px`
         element.style.top = `${pose.position!.y}px`
     }
     if (Object.hasOwnProperty.call(pose, 'rotation') && pose.rotation !== undefined) {
-        const originRotation = element.style.transform?.match(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/)?.[1]
+        const originRotation = element.style.transform?.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/)?.[1]
         if (originRotation === undefined) {
             element.style.transform += `rotate(${pose.rotation || 0}deg)`
         } else {
-            element.style.transform = element.style.transform?.replace(/rotate\((-?(?:\d+)(?:\.\d+)?)deg\)/, `rotate(${pose.rotation || 0}deg)`) || ''
+            element.style.transform = element.style.transform?.replace(/rotate\((-?\d+(?:\.\d+)?)deg\)/, `rotate(${pose.rotation || 0}deg)`) || ''
         }
     }
     if (Object.hasOwnProperty.call(pose, 'scale') && pose.scale !== undefined) {
-        const originScale = element.style.transform?.match(/scale\((-?(?:\d+)(?:\.\d+)?)\)/)?.[1]
+        const originScale = element.style.transform?.match(/scale\((-?\d+(?:\.\d+)?)\)/)?.[1]
         if (originScale === undefined) {
             element.style.transform += `scale(${pose.scale || 1})`
         } else {
-            element.style.transform = element.style.transform?.replace(/scale\((-?(?:\d+)(?:\.\d+)?)\)/, `scale(${pose.scale || 1})`) || ''
+            element.style.transform = element.style.transform?.replace(/scale\((-?\d+(?:\.\d+)?)\)/, `scale(${pose.scale || 1})`) || ''
         }
     }
     if (Object.hasOwnProperty.call(pose, 'width') && pose.width !== undefined || Object.hasOwnProperty.call(pose, 'height') && pose.height !== undefined) {
@@ -125,6 +138,7 @@ export class DragBase {
         const finger = new Finger(e, {
             inertial: this.options?.inertial ?? false,
             onDestroy: (f) => {
+                // 清理手指，一般onDestroy调用时，Finger已经走完END事件，已经销毁，这里清理掉
                 this.cleanFingers(f)
             },
         })
@@ -141,13 +155,16 @@ export class DragBase {
         }
         e.preventDefault()
         const optionsMaxFingerCount = this.options?.maxFingerCount ?? 1
+        // 限制最大手指数量
         const maxFingerCount = optionsMaxFingerCount !== -1 ? optionsMaxFingerCount : Infinity
         const fingers = Finger.createFingersByEvent(e, {
             inertial: this.options?.inertial ?? false,
             onDestroy: (f) => {
+                // 清理手指，一般onDestroy调用时，Finger已经走完END事件，已经销毁，这里清理掉
                 this.cleanFingers(f)
             },
         })
+        // 过滤掉已销毁的手指，避免后续操作出错
         const validFingers = fingers.filter(finger => !finger.getIsDestroyed())
         this.poses.push({
             pose: this.options?.getPose?.(this.element) || defaultGetPose(this.element),
@@ -285,6 +302,11 @@ export class DragBase {
         }
         return defaultGetPose(element)
     }
+    /**
+     * 获取元素的全局坐标和尺寸信息
+     * @param element 元素
+     * @returns 元素的全局坐标和尺寸信息
+     */
     protected getGlobalPose(element: HTMLElement): Pose {
         const pose = this.getPose(element)
         const rect = element.getBoundingClientRect()
@@ -345,12 +367,17 @@ export class DragBase {
     setCurrentOperationType(type: DragOperationType) {
         this.currentOperationType = type
     }
+    /**
+     * 触发事件
+     * @param type 事件类型
+     * @param fingers 手指列表，选填，不填则使用当前类的手指列表
+     */
     trigger(type: DragOperationType, fingers?: Finger[]) {
         if (!this.isEnabled) {
             return
         }
         const callbacks = this.events.get(type) ?? []
-        callbacks.forEach(callback => callback(fingers || this.fingers))
+        callbacks.forEach(callback => callback(fingers ?? this.fingers))
     }
     getCurrentOperationType() {
         return this.currentOperationType
