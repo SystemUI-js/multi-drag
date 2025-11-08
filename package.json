@@ -13,10 +13,10 @@
   "homepage": "https://systemui-js.github.io/multi-drag/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zhangxiao/multi-drag.git"
+    "url": "https://github.com/SystemUI-js/multi-drag"
   },
   "bugs": {
-    "url": "https://github.com/zhangxiao/multi-drag/issues"
+    "url": "https://github.com/SystemUI-js/multi-drag/issues"
   },
   "type": "module",
   "scripts": {

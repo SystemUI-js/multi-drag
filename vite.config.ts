@@ -85,7 +85,7 @@ export default defineConfig(({ mode }) => {
     return {
       ...baseConfig,
       build: {
-        outDir: 'dist/assets', // demo的js放在assets目录下
+        outDir: 'dist/demo', // demo的js放在demo目录下
         rollupOptions: {
           input: {
             demo: resolve(__dirname, 'index.html')
@@ -102,7 +102,7 @@ export default defineConfig(({ mode }) => {
           }
         }
       },
-      base: '/multi-drag/'
+      base: '/multi-drag/demo/'
     }
   }
 

@@ -16,7 +16,7 @@
 
 ## 📺 演示
 
-![DEMO](./assets/demo.gif)
+![DEMO](https://github.com/SystemUI-js/multi-drag/raw/main/assets/demo.gif)
 
 [在线演示](https://systemui-js.github.io/multi-drag/)
 
