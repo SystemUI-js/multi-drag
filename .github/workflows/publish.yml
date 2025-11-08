@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - dev
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -73,7 +76,7 @@ jobs:
       # 发布到 npm。main 使用 latest tag，dev 使用 dev tag。
       # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）。
       - name: Publish to npm
-        if: steps.version.outputs.should_publish == 'true'
+        if: steps.version.outputs.should_publish == 'true' && github.event_name == 'push'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -82,7 +85,7 @@ jobs:
 
       # 无论是否发布成功，只要是 dev 分支，都确保 dist-tag=dev 指向当前 version
       - name: Ensure dev dist-tag
-        if: env.PUBLISH_TAG == 'dev'
+        if: env.PUBLISH_TAG == 'dev' && github.event_name == 'push'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
