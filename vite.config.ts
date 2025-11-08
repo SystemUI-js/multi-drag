@@ -31,6 +31,7 @@ const moveScriptsToBody = () => {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isLib = mode === 'lib'
+  const isDemo = mode === 'demo'
 
   const baseConfig = {
     plugins: [
@@ -49,10 +50,11 @@ export default defineConfig(({ mode }) => {
   }
 
   if (isLib) {
-    // 库模式配置
+    // 库模式配置 - 用于打包API接口
     return {
       ...baseConfig,
       build: {
+        outDir: 'dist', // API接口放在dist目录下
         lib: {
           // 入口文件路径
           entry: resolve(__dirname, 'src/index.ts'),
@@ -78,10 +80,36 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  if (isDemo) {
+    // Demo模式配置 - 用于打包demo
+    return {
+      ...baseConfig,
+      build: {
+        outDir: 'dist/assets', // demo的js放在assets目录下
+        rollupOptions: {
+          input: {
+            demo: resolve(__dirname, 'index.html')
+          },
+          output: {
+            entryFileNames: 'demo-[hash].js',
+            chunkFileNames: 'chunks/demo-[hash].js',
+            assetFileNames: (assetInfo) => {
+              if (assetInfo.name?.endsWith('.css')) {
+                return 'demo-[hash].[ext]'
+              }
+              return '[name]-[hash].[ext]'
+            }
+          }
+        }
+      },
+      base: '/multi-drag/'
+    }
+  }
+
   // 开发模式配置
   return {
     ...baseConfig,
-    base: '/multi-drag/',
+    base: '/',
     plugins: [
       ...baseConfig.plugins,
       moveScriptsToBody(),
