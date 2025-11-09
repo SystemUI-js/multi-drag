@@ -1,5 +1,5 @@
 import { Point } from '../utils/mathUtils';
-import { DragBase, DragOperationType, Options } from './base';
+import { DragBase, DragOperationType, Options, Pose } from './base';
 import { Finger, FingerOperationType } from './finger';
 import { cloneDeep } from 'lodash'
 
@@ -18,17 +18,14 @@ export class Drag extends DragBase {
         const initialPose = cloneDeep(this.getPose(this.element))
         this.initialPosition = initialPose.position
     }
-    handleMove = (fingers: Finger[]) => {
-        if (this.currentOperationType !== DragOperationType.Move && this.currentOperationType !== DragOperationType.Inertial) {
-            return
-        }
+    private getPoseFromFingers(fingers: Finger[], type: FingerOperationType): Partial<Pose> | void {
         if (!fingers.length) {
             return
         }
         // 找到已经移动了的finger
         const validFingerMovements = fingers.map<Point | null>(finger => {
             const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
-            const currentPoint = finger.getLastOperation(FingerOperationType.Move)?.point
+            const currentPoint = finger.getLastOperation(type)?.point
             if (startPoint && currentPoint) {
                 return {
                     x: currentPoint.x - startPoint.x,
@@ -44,17 +41,29 @@ export class Drag extends DragBase {
             newPositionX += item.x / validFingerMovements.length
             newPositionY += item.y / validFingerMovements.length
         })
-        const newPose = { position: { x: newPositionX, y: newPositionY } }
-        this.setPose(this.element, newPose, DragOperationType.Move)
+        return { position: { x: newPositionX, y: newPositionY } }
     }
-    handleEnd = () => {
-        // if (this.lastPose && this.initialPose) {
-        //     this.setPose(this.element, this.lastPose, DragOperationType.End)
-        // }
+    private handleMove = (fingers: Finger[]) => {
+        if (this.currentOperationType !== DragOperationType.Move && this.currentOperationType !== DragOperationType.Inertial) {
+            return
+        }
+        if (!fingers.length) {
+            return
+        }
+        const newPose = this.getPoseFromFingers(fingers, FingerOperationType.Move)
+        if (newPose) {
+            this.setPose(this.element, newPose, DragOperationType.Move)
+        }
     }
-    handleInertialEnd = () => {
+    private handleEnd = (fingers: Finger[]) => {
+        const newPose = this.getPoseFromFingers(fingers, FingerOperationType.End)
+        if (newPose) {
+            this.setPose(this.element, newPose, DragOperationType.End)
+        }
+    }
+    // private handleInertialEnd = () => {
         // if (this.lastPose && this.initialPose) {
         //     this.setPose(this.element, this.lastPose, DragOperationType.InertialEnd)
         // }
-    }
+    // }
 }
