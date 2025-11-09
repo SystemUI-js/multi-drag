@@ -1,0 +1,56 @@
+name: "🌟 新功能请求 (Feature Request)"
+description: 为这个项目提出一个新功能的建议（Commit a feature request to help us improve）
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你花时间提出建议来帮助我们改进！
+        (Thanks for taking the time to suggest an enhancement!)
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你的功能请求是否与某个问题有关？ (Is your feature request related to a problem?)
+      description: 请描述一下你遇到的问题或痛点。 (Please describe the problem or pain point.)
+      placeholder: "我总是...的时候感到很沮丧，因为..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 你期望的解决方案是什么？ (Describe the solution you'd like)
+      description: 请清晰简洁地描述你希望实现的功能。 (A clear and concise description of what you want to happen.)
+      placeholder: "我希望...可以... 这样我就能...（I hope... can... so that I can...）"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你是否考虑过其他方案？ (Describe alternatives you've considered)
+      description: 描述一下你考虑过的任何替代方案或功能。 (A clear and concise description of any alternative solutions or features you've considered.)
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或模型图 (Screenshots or Mockups)
+      description: |
+        如果可以的话，添加截图、流程图或简单的模型图来帮助解释你的想法。
+        (If applicable, add screenshots, flowcharts, or mockups to help explain your idea.)
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他附加内容 (Additional context)
+      description: |
+        关于这个功能请求，还有其他要补充的吗？
+        (Add any other context about the feature request here. e.g. Why is this important? Who would benefit?)
+    validations:
+      required: false
