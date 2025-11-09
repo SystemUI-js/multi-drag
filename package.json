@@ -1,6 +1,6 @@
 {
   "name": "@system-ui-js/multi-drag",
-  "version": "0.2.3",
+  "version": "0.2.4-dev.1",
   "description": "A multi-drag library.",
   "keywords": [
     "touch",
@@ -24,7 +24,7 @@
     "build": "vite build && tsc --project tsconfig.build.json",
     "build:lib": "vite build --mode lib",
     "build:demo": "vite build --mode demo",
-    "build:all": "npm run build:lib && npm run build:demo",
+    "build:all": "npm run build:lib && npm run build:demo && npm run build:types",
     "build:types": "tsc --project tsconfig.build.json",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings=0",
