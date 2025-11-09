@@ -42,7 +42,8 @@ import {
   Mixin,
   MixinType,
   getPoseFromElement,
-  applyPoseToElement
+  applyPoseToElement,
+  DragOperationType
 } from '@system-ui-js/multi-drag';
 ```
 
@@ -276,3 +277,13 @@ npm run test:e2e
 - 对于复杂的手势组合，建议使用Mixin类以获得最佳体验
 - 惯性拖拽功能在性能受限设备上可能会有不同表现
 - 如有任何问题，请查看示例代码或提交Issue
+
+## 捐赠
+
+好心人！如果你恰好财力雄厚，麻烦支持一下，一个人在家写代码不容易~
+
+金额随缘，祝您发财！
+
+https://afdian.com/a/wszxdhr?tab=home
+
+
