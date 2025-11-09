@@ -1,9 +1,9 @@
 import './style.css'
-import { defaultGetPose, Drag, DragBase, Mixin, MixinType } from '..';
+import { defaultSetPose, Drag, DragBase, Mixin, MixinType } from '..';
 import VConsole from 'vconsole';
 import log from 'loglevel'
 import { Finger, FingerOperationType } from '../drag/finger';
-import { DragOperationType } from '../drag/base';
+import { DragOperationType, Pose } from '../drag/base';
 
 if (process.env.NODE_ENV === 'development') {
     log.setLevel('trace');
@@ -96,16 +96,32 @@ printFingerByDragBase(drag2)
 printFingerByDragBase(drag3)
 // printFingerByDragBase(drag4)
 
-const limit75 = () => {}
+const limit75 = (element: HTMLElement, pose: Partial<Pose>) => {
+    // 拖动不能超过原来中心75px
+    const center = { x: 50, y: 50 }
+    const { position } = pose
+    if (position) {
+        const newPosition = { x: position.x, y: position.y }
+        const distance = Math.sqrt(Math.pow(center.x - newPosition.x, 2) + Math.pow(center.y - newPosition.y, 2))
+        if (distance > 75) {
+            const ratio = distance / 75
+            newPosition.x = (position.x - center.x) / ratio + center.x
+            newPosition.y = (position.y - center.y) / ratio + center.y
+        }
+        defaultSetPose(element, { ...pose, position: newPosition })
+    }
+}
 const joystickGoBack = (ele: HTMLElement) => {
     ele.style.left = '50px'
     ele.style.top = '50px'
 }
-const joystick1Drag = new Drag(joystick1, {
-    setPoseOnEnd: joystickGoBack
+new Drag(joystick1, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
 })
-const joystick2Drag = new Drag(joystick2, {
-    setPoseOnEnd: joystickGoBack
+new Drag(joystick2, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
 })
 
 function printFingerByDragBase(d: DragBase) {

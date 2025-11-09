@@ -16,7 +16,51 @@
 
 ## 📺 演示
 
+通过以下代码就可以实现多个元素同时拖拽
+
+```typescript
+const drag1 = new Mixin(item1, {}, [MixinType.Drag, MixinType.Scale])
+
+const drag2 = new Mixin(item2, {}, [MixinType.Rotate, MixinType.Scale])
+
+const drag3 = new Mixin(item3, {}, [MixinType.Drag, MixinType.Rotate, MixinType.Scale])
+```
+
 ![DEMO](https://github.com/SystemUI-js/multi-drag/raw/main/assets/demo.gif)
+
+通过以下代码就可以实现双摇杆功能
+
+```typescript
+const limit75 = (element: HTMLElement, pose: Partial<Pose>) => {
+    // 拖动不能超过原来中心75px
+    const center = { x: 50, y: 50 }
+    const { position } = pose
+    if (position) {
+        const newPosition = { x: position.x, y: position.y }
+        const distance = Math.sqrt(Math.pow(center.x - newPosition.x, 2) + Math.pow(center.y - newPosition.y, 2))
+        if (distance > 75) {
+            const ratio = distance / 75
+            newPosition.x = (position.x - center.x) / ratio + center.x
+            newPosition.y = (position.y - center.y) / ratio + center.y
+        }
+        defaultSetPose(element, { ...pose, position: newPosition })
+    }
+}
+const joystickGoBack = (ele: HTMLElement) => {
+    ele.style.left = '50px'
+    ele.style.top = '50px'
+}
+new Drag(joystick1, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
+})
+new Drag(joystick2, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
+})
+```
+
+![DEMO2](https://github.com/SystemUI-js/multi-drag/raw/main/assets/demo2.gif)
 
 [在线演示](https://systemui-js.github.io/multi-drag/demo/)
 
@@ -41,8 +85,8 @@ import {
   Rotate,
   Mixin,
   MixinType,
-  getPoseFromElement,
-  applyPoseToElement
+  defaultSetPose,
+  defaultGetPose
 } from '@system-ui-js/multi-drag';
 ```
 
@@ -139,20 +183,28 @@ new Scale(element, options);
 
 ### 3. 工具函数
 
-#### getPoseFromElement
+#### defaultGetPose
 
-获取元素的当前位姿（位置、尺寸等信息）。
+获取元素的当前位姿（位置、尺寸等信息）的默认函数。
+
+默认是从元素的style属性中获取位姿信息。
+
+如果需要可以在`new Drag()`时的options中自定义获取位姿的函数。
 
 ```typescript
-function getPoseFromElement(element: HTMLElement): Pose;
+function defaultGetPose(element: HTMLElement): Pose;
 ```
 
-#### applyPoseToElement
+#### defaultSetPose
 
-将位姿应用到元素上。
+将位姿应用到元素上的默认函数。
+
+默认是将位姿信息应用到元素的style属性中。
+
+如果需要可以在`new Drag()`时的options中自定义设置位姿的函数。
 
 ```typescript
-function applyPoseToElement(element: HTMLElement, pose: Pose, options?: ApplyPoseOptions): void;
+function defaultSetPose(element: HTMLElement, pose: Pose): void;
 ```
 
 ### 4. 一些类型
