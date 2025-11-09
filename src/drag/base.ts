@@ -327,7 +327,7 @@ export class DragBase {
             }
             return
         }
-        if (this.options?.setPose) {
+        if (this.options?.setPose || (this.options?.setPose && this.options && type === DragOperationType.End && !this.options?.setPoseOnEnd)) {
             this.options.setPose(element, pose)
             return
         }
