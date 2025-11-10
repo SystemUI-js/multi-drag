@@ -1,0 +1,100 @@
+name: Sync master to dev
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-master-to-dev
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Merge master/main into dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch branches
+        run: |
+          git remote set-url origin "${{ github.server_url }}/${{ github.repository }}.git"
+          git fetch origin --prune
+          # Try to fetch both possible default branch names
+          git fetch origin master || true
+          git fetch origin main || true
+          git fetch origin dev || true
+
+      - name: Detect default branch (master/main)
+        id: detect
+        shell: bash
+        run: |
+          if git ls-remote --exit-code --heads origin master >/dev/null 2>&1; then
+            echo "name=master" >> "$GITHUB_OUTPUT"
+          elif git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
+            echo "name=main" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Neither master nor main branch exists on origin."
+            exit 1
+          fi
+
+      - name: Checkout dev branch (create if missing)
+        shell: bash
+        run: |
+          # If dev exists on origin, base our local branch on it; else create from the default branch
+          if git ls-remote --exit-code --heads origin dev >/dev/null 2>&1; then
+            git checkout -B dev origin/dev
+          else
+            echo "dev branch does not exist on origin, creating it based on ${{ steps.detect.outputs.name }}"
+            git checkout -B dev "origin/${{ steps.detect.outputs.name }}"
+            git push -u origin dev
+          fi
+
+      - name: Merge default branch into dev
+        shell: bash
+        run: |
+          set -e
+          BASE_BRANCH="${{ steps.detect.outputs.name }}"
+          echo "Merging origin/${BASE_BRANCH} into dev..."
+          # Ensure we have the latest base branch state
+          git fetch origin "$BASE_BRANCH"
+
+          # Attempt merge
+          if git merge --no-edit "origin/${BASE_BRANCH}"; then
+            echo "Merge succeeded."
+          else
+            echo "::error::Merge conflict when merging ${BASE_BRANCH} into dev. Please resolve conflicts manually."
+            # Abort merge to avoid committing conflict markers
+            git merge --abort || true
+            exit 1
+          fi
+
+      - name: Push changes to dev (if any)
+        shell: bash
+        run: |
+          # Only push if there are commits ahead of origin/dev
+          if [ -n "$(git log --oneline origin/dev..HEAD)" ]; then
+            echo "Pushing updates to origin/dev..."
+            git push origin dev
+          else
+            echo "No updates needed. dev is already up to date with ${{ steps.detect.outputs.name }}"
+          fi

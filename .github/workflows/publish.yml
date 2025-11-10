@@ -71,7 +71,6 @@ jobs:
         run: |
           yarn test
           yarn build:all
-          yarn build:types
 
       # 发布到 npm。main 使用 latest tag，dev 使用 dev tag。
       # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）。
