@@ -52,12 +52,6 @@ export class Finger {
         document.addEventListener('pointermove', this.pointerHandlers.handleDocumentMove)
         document.addEventListener('pointerup', this.pointerHandlers.handleDocumentEnd)
         document.addEventListener('pointercancel', this.pointerHandlers.handleDocumentEnd)
-        document.addEventListener('pointercancel', (e) => {
-            log.info('pointercancel', e)
-        })
-        document.addEventListener('pointerup', (e) => {
-            log.info('pointerup', e)
-        })
     }
     private pointerHandlers: { [handlerName: string]: (e: PointerEvent) => void } = {}
     getPath(type?: FingerOperationType) {
@@ -95,11 +89,6 @@ export class Finger {
     }
     // 处理document事件，将后续事件入path
     private handleDocumentMove = (e: PointerEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        log.info('[Finger] pointer MOVE, ', e.pressure)
-
-
         if (this.isDestroyed || !this.isAfterStage(FingerOperationType.Start)) {
             return
         }

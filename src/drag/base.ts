@@ -120,7 +120,6 @@ export class DragBase {
         this.element.style.touchAction = 'none'
     }
     private handlePointerDown = (e: PointerEvent) => {
-        log.info(e)
         if (!this.isEnabled || this.isPassive) {
             return
         }
@@ -137,7 +136,6 @@ export class DragBase {
             operationType: DragOperationType.Start,
             time: e.timeStamp,
         })
-        log.info(this.element.style)
         const finger = new Finger(e, {
             inertial: this.options?.inertial ?? false,
             onDestroy: (f) => {
@@ -146,7 +144,6 @@ export class DragBase {
             },
         })
         const isValid = !finger.getIsDestroyed()
-        log.info('isValid', isValid)
         if (isValid) {
             this.fingers.push(finger)
         }
