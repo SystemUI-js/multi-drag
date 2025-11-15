@@ -74,7 +74,7 @@ describe('[DragBase] addEventListener test', () => {
 describe('[DragBase] maxFingerCount', () => {
     it('maxFingerCount === 1, but finger count is 2', () => {
         const element = createAnElement()
-        const dragBase = new DragBase(element)
+        const dragBase = new DragBase(element, { maxFingerCount: 2 })
         const listener = jest.fn()
         dragBase.addEventListener(DragOperationType.Move, listener)
         mockTouchMove(element, { x: 40, y: 40 }, { x: 50, y: 50 }, 2)

@@ -17,98 +17,84 @@ export function getTouchCnt() {
 }
 
 export function mockTouchMove(element: HTMLElement, initPoint: Point, movePoint: Point, fingerCnt: number) {
-    const touchIds = Array.from({ length: fingerCnt }, () => getTouchCnt())
-    const touchStart = touchIds.map((id, index) => {
+    const pointerIds = Array.from({ length: fingerCnt }, () => getTouchCnt())
+    const pointerDown = pointerIds.map((id, index) => {
         return () => {
-            element.dispatchEvent(new TouchEvent('touchstart', {
+            element.dispatchEvent(new PointerEvent('pointerdown', {
                 bubbles: true,
                 cancelable: true,
-                touches: [{
-                    identifier: id,
-                    force: 1,
-                    pageX: initPoint.x + index * 10,
-                    pageY: initPoint.y + index * 10,
-                    radiusX: 1,
-                    radiusY: 1,
-                    rotationAngle: 0,
-                    screenX: initPoint.x + index * 10,
-                    screenY: initPoint.y + index * 10,
-                    target: element,
-                    clientX: initPoint.x + index * 10,
-                    clientY: initPoint.y + index * 10,
-                }],
+                button: 0,
+                clientX: initPoint.x + index * 10,
+                clientY: initPoint.y + index * 10,
+                pointerId: id,
+                pointerType: 'touch',
+                isPrimary: index === 0,
             }))
         }
     })
-    const touchMove = touchIds.map((id, index) => {
+    const pointerMove = pointerIds.map((id, index) => {
         return () => {
-            document.dispatchEvent(new TouchEvent('touchmove', {
+            document.dispatchEvent(new PointerEvent('pointermove', {
                 bubbles: true,
                 cancelable: true,
-                touches: [{
-                    identifier: id,
-                    force: 1,
-                    pageX: movePoint.x + index * 10,
-                    pageY: movePoint.y + index * 10,
-                    radiusX: 1,
-                    radiusY: 1,
-                    rotationAngle: 0,
-                    screenX: movePoint.x + index * 10,
-                    screenY: movePoint.y + index * 10,
-                    target: document,
-                    clientX: movePoint.x + index * 10,
-                    clientY: movePoint.y + index * 10,
-                }],
+                button: 0,
+                clientX: movePoint.x + index * 10,
+                clientY: movePoint.y + index * 10,
+                pointerId: id,
+                pointerType: 'touch',
+                isPrimary: index === 0,
             }))
         }
     })
-    const touchEnd = touchIds.map((id, index) => {
+    const pointerUp = pointerIds.map((id, index) => {
         return () => {
-            document.dispatchEvent(new TouchEvent('touchend', {
+            document.dispatchEvent(new PointerEvent('pointerup', {
                 bubbles: true,
                 cancelable: true,
-                touches: [{
-                    identifier: id,
-                    force: 1,
-                    pageX: movePoint.x + index * 10,
-                    pageY: movePoint.y + index * 10,
-                    radiusX: 1,
-                    radiusY: 1,
-                    rotationAngle: 0,
-                    screenX: movePoint.x + index * 10,
-                    screenY: movePoint.y + index * 10,
-                    target: document,
-                    clientX: movePoint.x + index * 10,
-                    clientY: movePoint.y + index * 10,
-                }],
+                button: 0,
+                clientX: movePoint.x + index * 10,
+                clientY: movePoint.y + index * 10,
+                pointerId: id,
+                pointerType: 'touch',
+                isPrimary: index === 0,
             }))
         }
     })
-    touchStart.forEach(fn => fn())
-    touchMove.forEach(fn => fn())
-    touchEnd.forEach(fn => fn())
+    pointerDown.forEach(fn => fn())
+    pointerMove.forEach(fn => fn())
+    pointerUp.forEach(fn => fn())
 }
 
 export function mockMouseMove(element: HTMLElement, initPoint: Point, movePoint: Point) {
-    element.dispatchEvent(new MouseEvent('mousedown', {
+    const pointerId = Math.floor(Math.random() * 1000000)
+    element.dispatchEvent(new PointerEvent('pointerdown', {
         bubbles: true,
         cancelable: true,
         button: 0,
         clientX: initPoint.x,
         clientY: initPoint.y,
+        pointerId: pointerId,
+        pointerType: 'mouse',
+        isPrimary: true,
     }))
-    document.dispatchEvent(new MouseEvent('mousemove', {
+    document.dispatchEvent(new PointerEvent('pointermove', {
         bubbles: true,
         cancelable: true,
         button: 0,
         clientX: movePoint.x,
         clientY: movePoint.y,
+        pointerId: pointerId,
+        pointerType: 'mouse',
+        isPrimary: true,
     }))
-    document.dispatchEvent(new MouseEvent('mouseup', {
+    document.dispatchEvent(new PointerEvent('pointerup', {
         bubbles: true,
         cancelable: true,
         button: 0,
         clientX: movePoint.x,
         clientY: movePoint.y,
+        pointerId: pointerId,
+        pointerType: 'mouse',
+        isPrimary: true,
     }))
 }
