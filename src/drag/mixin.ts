@@ -13,7 +13,7 @@ export enum MixinType {
 export class Mixin extends DragBase {
     private dragInstances: DragBase[] = []
     constructor(element: HTMLElement, options: Options = {}, private mixinTypes: MixinType[]) {
-        super(element, options)
+        super(element, { ...options, maxFingerCount: -1 })
         if (this.mixinTypes.includes(MixinType.Drag)) {
             this.enableDrag()
         }

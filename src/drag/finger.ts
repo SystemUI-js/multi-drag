@@ -18,10 +18,8 @@ export interface FingerPathItem {
     point: Point;
     timestamp: number;
     type: FingerOperationType;
-    event: supportedEvents
+    event: PointerEvent
 }
-
-type supportedEvents = MouseEvent | Touch
 
 export interface Options {
     inertial?: boolean
@@ -36,54 +34,30 @@ export class Finger {
     private path: FingerPathItem[] = []
     private eventListeners: Map<FingerOperationType, ((item: FingerPathItem) => void)[]> = new Map()
     private isDestroyed = false
-    private readonly touchId: number | undefined
+    private readonly pointerId: number
     private isMoving = false
     private currentOperationType: FingerOperationType = FingerOperationType.Start
-    // 创建手指实例，根据事件类型（鼠标或触摸）创建相应的Finger实例
-    static createFingersByEvent(event: MouseEvent | TouchEvent, options?: Options) {
-        const fingers: Finger[] = []
-        if (event instanceof MouseEvent) {
-            const finger = new Finger(event, options)
-            fingers.push(finger)
-        } else if (event instanceof TouchEvent) {
-            // 触摸可能有多个手指，每个手指对应一个Finger实例
-            // 因为拖动会找不到touchId，所以这里又改回用changedTouches
-            for (const touch of [...(event.changedTouches.length ? event.changedTouches : event.touches)]) {
-                const finger = new Finger(touch, options)
-                fingers.push(finger)
-            }
-        }
-        return fingers
-    }
-    constructor(event: supportedEvents, private options: Options | undefined = {}) {
+    constructor(event: PointerEvent, private options: Options | undefined = {}) {
         const point = { x: event.clientX, y: event.clientY }
         // 初始事件入path
         const startItem = this.pushNewPathItem(point, event, FingerOperationType.Start)
         this.triggerEvent(FingerOperationType.Start, startItem)
-        // Jest不支持Touch，暂时这样处理赋值
-        if (typeof (event as Touch).identifier === 'number') {
-            this.touchId = (event as Touch).identifier
-        }
-        this.mouseHandlers = {
+        // 使用 pointerId 替代 touchId
+        this.pointerId = event.pointerId
+        this.pointerHandlers = {
             handleDocumentMove: this.handleDocumentMove.bind(this),
             handleDocumentEnd: this.handleDocumentEnd.bind(this)
         }
-        this.touchHandlers = {
-            handleDocumentTouchMove: this.handleDocumentTouchMove.bind(this),
-            handleDocumentTouchEnd: this.handleDocumentTouchEnd.bind(this)
-        }
         // 创建document事件监听，用于捕获后续事件
-        document.addEventListener('mousemove', this.mouseHandlers.handleDocumentMove)
-        document.addEventListener('mouseup', this.mouseHandlers.handleDocumentEnd)
-        document.addEventListener('touchmove', this.touchHandlers.handleDocumentTouchMove)
-        document.addEventListener('touchend', this.touchHandlers.handleDocumentTouchEnd)
+        document.addEventListener('pointermove', this.pointerHandlers.handleDocumentMove)
+        document.addEventListener('pointerup', this.pointerHandlers.handleDocumentEnd)
+        document.addEventListener('pointercancel', this.pointerHandlers.handleDocumentEnd)
     }
-    private mouseHandlers: { [handlerName: string]: (e: MouseEvent) => void } = {}
-    private touchHandlers: { [handlerName: string]: (e: TouchEvent) => void } = {}
+    private pointerHandlers: { [handlerName: string]: (e: PointerEvent) => void } = {}
     getPath(type?: FingerOperationType) {
         return type ? this.path.filter(item => item.type === type) : this.path
     }
-    private pushNewPathItem(point: Point, event: supportedEvents, type: FingerOperationType) {
+    private pushNewPathItem(point: Point, event: PointerEvent, type: FingerOperationType) {
         const timestamp = Date.now()
         const item = { point, timestamp, type, event }
         this.path.push(item)
@@ -114,47 +88,28 @@ export class Finger {
         return indexOfCurrentType >= indexOfType
     }
     // 处理document事件，将后续事件入path
-    private handleDocumentMove = (e: MouseEvent) => {
+    private handleDocumentMove = (e: PointerEvent) => {
         if (this.isDestroyed || !this.isAfterStage(FingerOperationType.Start)) {
+            return
+        }
+        // 只处理与当前 pointerId 匹配的事件
+        if (e.pointerId !== this.pointerId) {
             return
         }
         const moveItem = this.pushNewPathItem({ x: e.clientX, y: e.clientY }, e, FingerOperationType.Move)
         this.triggerEvent(FingerOperationType.Move, moveItem)
         this.isMoving = true
     }
-    private handleDocumentTouchMove = (e: TouchEvent) => {
-        if (this.isDestroyed || !this.isAfterStage(FingerOperationType.Start)) {
-            return
-        }
-        const touch = [...e.changedTouches].find(t => t.identifier === this.touchId) || [...e.touches].find(t => t.identifier === this.touchId)
-        if (!touch) {
-            return
-        }
-        const moveItem = this.pushNewPathItem({ x: touch.clientX, y: touch.clientY }, touch, FingerOperationType.Move)
-        this.triggerEvent(FingerOperationType.Move, moveItem)
-        this.isMoving = true
-    }
-    private handleDocumentEnd = (e: MouseEvent) => {
+    private handleDocumentEnd = (e: PointerEvent) => {
         if (this.isDestroyed) {
+            return
+        }
+        // 只处理与当前 pointerId 匹配的事件
+        if (e.pointerId !== this.pointerId) {
             return
         }
         const endItem = this.pushNewPathItem({ x: e.clientX, y: e.clientY }, e, FingerOperationType.End)
-        log.info('[Finger] mouse END, ', this.path)
-        this.triggerEvent(FingerOperationType.End, endItem)
-        this.destroy()
-    }
-    private handleDocumentTouchEnd = (e: TouchEvent) => {
-        if (this.isDestroyed) {
-            return
-        }
-        // 因为拖动会找不到touchId，所以这里又改回用changedTouches，在特殊情况下changedTouches可能为空
-        const touch = [...e.changedTouches, ...e.touches].find(t => t.identifier === this.touchId)
-        if (!touch) {
-            return
-        }
-
-        const endItem = this.pushNewPathItem({ x: touch.clientX, y: touch.clientY }, touch, FingerOperationType.End)
-        log.info('[Finger] touch END, ', this.path)
+        log.info('[Finger] pointer END, ', this.path)
         this.triggerEvent(FingerOperationType.End, endItem)
         this.destroy()
     }
@@ -172,10 +127,9 @@ export class Finger {
         return this.path[this.path.length - 1]
     }
     destroy() {
-        document.removeEventListener('mousemove', this.mouseHandlers.handleDocumentMove)
-        document.removeEventListener('mouseup', this.mouseHandlers.handleDocumentEnd)
-        document.removeEventListener('touchmove', this.touchHandlers.handleDocumentTouchMove)
-        document.removeEventListener('touchend', this.touchHandlers.handleDocumentTouchEnd)
+        document.removeEventListener('pointermove', this.pointerHandlers.handleDocumentMove)
+        document.removeEventListener('pointerup', this.pointerHandlers.handleDocumentEnd)
+        document.removeEventListener('pointercancel', this.pointerHandlers.handleDocumentEnd)
         this.options?.onDestroy?.(this)
 
         for (const type of Object.values(FingerOperationType)) {

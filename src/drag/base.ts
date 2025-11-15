@@ -116,10 +116,10 @@ export class DragBase {
     private isPassive: boolean = false
     constructor(protected element: HTMLElement, protected options?: Options) {
         this.isPassive = !!(options?.passive)
-        element.addEventListener('mousedown', this.handleMouseDown)
-        element.addEventListener('touchstart', this.handleTouchStart)
+        element.addEventListener('pointerdown', this.handlePointerDown)
+        this.element.style.touchAction = 'none'
     }
-    private handleMouseDown = (e: MouseEvent) => {
+    private handlePointerDown = (e: PointerEvent) => {
         if (!this.isEnabled || this.isPassive) {
             return
         }
@@ -127,7 +127,8 @@ export class DragBase {
         if (maxFingerCount !== -1 && this.fingers.length >= maxFingerCount) {
             return
         }
-        if (e.button !== 0) {
+        // 只处理主按钮（左键）或触摸/笔
+        if (e.pointerType === 'mouse' && e.button !== 0) {
             return
         }
         this.poses.push({
@@ -142,42 +143,15 @@ export class DragBase {
                 this.cleanFingers(f)
             },
         })
-        this.fingers.push(finger)
+        const isValid = !finger.getIsDestroyed()
+        if (isValid) {
+            this.fingers.push(finger)
+        }
         finger.addEventListener(FingerOperationType.Move, this.handleFingerMove)
         finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
         this.currentOperationType = DragOperationType.Start
         this.trigger(DragOperationType.Start)
-        log.info(`[DragBase] handleMouseDown, fingers length: ${this.fingers.length}`)
-    }
-    private handleTouchStart = (e: TouchEvent) => {
-        if (!this.isEnabled || this.isPassive) {
-            return
-        }
-        e.preventDefault()
-        const optionsMaxFingerCount = this.options?.maxFingerCount ?? 1
-        // 限制最大手指数量
-        const maxFingerCount = optionsMaxFingerCount !== -1 ? optionsMaxFingerCount : Infinity
-        const fingers = Finger.createFingersByEvent(e, {
-            inertial: this.options?.inertial ?? false,
-            onDestroy: (f) => {
-                // 清理手指，一般onDestroy调用时，Finger已经走完END事件，已经销毁，这里清理掉
-                this.cleanFingers(f)
-            },
-        })
-        // 过滤掉已销毁的手指，避免后续操作出错
-        const validFingers = fingers.filter(finger => !finger.getIsDestroyed())
-        this.poses.push({
-            pose: this.options?.getPose?.(this.element) || defaultGetPose(this.element),
-            operationType: DragOperationType.Start,
-            time: e.timeStamp,
-        })
-        this.fingers.push(...validFingers.slice(0, maxFingerCount))
-        validFingers.forEach(finger => {
-            finger.addEventListener(FingerOperationType.Move, this.handleFingerMove)
-            finger.addEventListener(FingerOperationType.End, this.handleFingerMoveComplete)
-        })
-        this.trigger(DragOperationType.Start)
-        log.info(`[DragBase] handleTouchStart, fingers length: ${this.fingers.length}`)
+        log.info(`[DragBase] handlePointerDown, fingers length: ${this.fingers.length}`)
     }
     private handleFingerMove = () => {
         this.currentOperationType = DragOperationType.Move
