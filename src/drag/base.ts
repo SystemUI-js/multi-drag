@@ -160,7 +160,9 @@ export class DragBase {
     private handleFingerMoveComplete = () => {
         this.trigger(DragOperationType.End)
         this.currentOperationType = DragOperationType.End
-        this.inertialMove()
+        if (this.options?.inertial) {
+            this.inertialMove()
+        }
     }
     private inertialMove() {
         const movePoseList = this.poses.filter(pose => pose.operationType === DragOperationType.Move)
