@@ -102,6 +102,13 @@
 ### 修复问题 🐛
 - 修复options.inertial设置对惯性不管用的问题
 
+## [0.2.6] - 2025-11-17
+
+### 新增功能 ✨
+
+### 修复问题 🐛
+- 修复 options.setPoseOnEnd 在 rotate 和 scale 不生效的问题（#31）
+
 ### 开发工具 🔧
 - 添加编辑器配置和项目规则（.editorconfig）
 
