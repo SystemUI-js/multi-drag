@@ -22,8 +22,6 @@ export interface FingerPathItem {
 }
 
 export interface Options {
-    inertial?: boolean
-    inertialOnlyOnTouch?: boolean
     onDestroy?: (finger: Finger) => void
 }
 
