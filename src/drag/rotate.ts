@@ -85,7 +85,7 @@ export class Rotate extends DragBase {
         }
         const angle = fingers.length === 1 ? this.getAngleBySingleFingers(fingers[0]) : this.getAngleByTwoFingers(fingers)
         const newPose = { rotation: initialRotation + angle }
-        this.setPose(this.element, newPose, DragOperationType.Move)
+        this.setPose(this.element, newPose, DragOperationType.End)
     }
     handleInertialEnd = () => {
         // if (this.lastPose && this.initialPose) {

@@ -77,7 +77,7 @@ export class Scale extends DragBase {
     }
     handleEnd = (fingers: Finger[]) => {
         const scale = fingers.length === 1 ? this.getScaleBySingleFingers(fingers[0]) : this.getScaleByTwoFingers(fingers)
-        this.setPose(this.element, { scale: this.startScale * scale }, DragOperationType.Move)
+        this.setPose(this.element, { scale: this.startScale * scale }, DragOperationType.End)
     }
     handleInertialEnd = () => {
         // if (this.lastPose && this.initialPose) {
