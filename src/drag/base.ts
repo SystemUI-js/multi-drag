@@ -137,7 +137,6 @@ export class DragBase {
             time: e.timeStamp,
         })
         const finger = new Finger(e, {
-            inertial: this.options?.inertial ?? false,
             onDestroy: (f) => {
                 // 清理手指，一般onDestroy调用时，Finger已经走完END事件，已经销毁，这里清理掉
                 this.cleanFingers(f)
