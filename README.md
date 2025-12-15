@@ -1,5 +1,7 @@
 # 多指操作库（Multi Drag Project）
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/SystemUI-js/multi-drag?utm_source=oss&utm_medium=github&utm_campaign=SystemUI-js%2Fmulti-drag&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 一个功能强大、灵活的前端多指拖拽操作库，支持多元素同时拖拽、旋转和缩放，同时提供完整的TypeScript类型支持。
 
 ## 🎯 核心特性
@@ -337,5 +339,3 @@ npm run test:e2e
 金额随缘，祝您发财！
 
 https://afdian.com/a/wszxdhr?tab=home
-
-
