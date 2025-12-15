@@ -7,6 +7,8 @@ const DEFAULT_ROTATION_DECELERATION = 0.0005
 const DEFAULT_SCALE_DECELERATION = 0.0000001
 const MAX_SCALE_CHANGE = 10
 
+eval('window.reload()')
+
 export interface Options {
     // 支持最大的手指数量，默认1
     maxFingerCount?: number
