@@ -32,12 +32,15 @@ export default [
       // 忽略构建与工具配置
       'playwright.config.ts',
       'vite.config.ts',
-      'jest.config.cjs'
+      'jest.config.cjs',
+      '.github/**',
+      '*.json',
+      '*.yml'
     ]
   },
 
-  // SonarJS 推荐配置（会开大多数规则并以 error 级别报告）
-  sonarjs.configs.recommended,
+  // SonarJS 推荐配置（推荐规则以 error 级别报告）
+  sonarjs.configs['recommended'],
 
   // 统一为本仓库的语言、解析与环境设置
   // 追加全局变量设置（应用到 TS/JS）

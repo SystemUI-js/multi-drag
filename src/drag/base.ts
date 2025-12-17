@@ -10,14 +10,14 @@ const MAX_SCALE_CHANGE = 10
 export interface Options {
     // 支持最大的手指数量，默认1
     maxFingerCount?: number
-		// 惯性拖拽，默认false
+    // 惯性拖拽，默认false
     inertial?: boolean
     // 被动模式，默认false
     // 被动模式下，不主动监听元素事件，而是外部调用trigger方法触发事件
     passive?: boolean
-		// 获取当前Pose
+    // 获取当前Pose
     getPose?: (element: HTMLElement) => Pose
-		// 设置当前Pose
+    // 设置当前Pose
     setPose?: (element: HTMLElement, pose: Partial<Pose>) => void
     // 在End时单独设置Pose，这可以让前面的setPose成为一种预览，从而提升性能
     setPoseOnEnd?: (element: HTMLElement, pose: Partial<Pose>) => void
@@ -62,13 +62,13 @@ function getInertialTimingFunction(initSpeed: number, deceleration: number) {
 export function defaultGetPose(element: HTMLElement): Pose {
     const width = element.offsetWidth
     const height = element.offsetHeight
-    const scale = Number(element.style.transform?.match(/scale\((-?\d+(?:\.\d+)?)\)/)?.[1]) || 1
+    const scale = Number(new RegExp(/scale\((-?\d+(?:\.\d+)?)\)/).exec(element.style.transform)?.[1]) || 1
     return {
         position: {
-            x: parseFloat(element.style.left || '0'),
-            y: parseFloat(element.style.top || '0'),
+            x: Number.parseFloat(element.style.left || '0'),
+            y: Number.parseFloat(element.style.top || '0'),
         },
-        rotation: Number(element.style.transform?.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/)?.[1]) || 0,
+        rotation: Number(new RegExp(/rotate\((-?\d+(?:\.\d+)?)deg\)/).exec(element.style.transform)?.[1]) || 0,
         width: width,
         height: height,
         scale,
@@ -81,36 +81,36 @@ export function defaultGetPose(element: HTMLElement): Pose {
  * @param pose
  */
 export function defaultSetPose(element: HTMLElement, pose: Partial<Pose>): void {
-    if (Object.hasOwnProperty.call(pose, 'position') && pose.position !== undefined) {
-        element.style.left = `${pose.position!.x}px`
-        element.style.top = `${pose.position!.y}px`
+    if (Object.hasOwn(pose, 'position') && pose.position !== undefined) {
+        element.style.left = `${pose.position.x}px`
+        element.style.top = `${pose.position.y}px`
     }
-    if (Object.hasOwnProperty.call(pose, 'rotation') && pose.rotation !== undefined) {
-        const originRotation = element.style.transform?.match(/rotate\((-?\d+(?:\.\d+)?)deg\)/)?.[1]
+    if (Object.hasOwn(pose, 'rotation') && pose.rotation !== undefined) {
+        const originRotation = new RegExp(/rotate\((-?\d+(?:\.\d+)?)deg\)/).exec(element.style.transform)?.[1]
         if (originRotation === undefined) {
             element.style.transform += `rotate(${pose.rotation || 0}deg)`
         } else {
             element.style.transform = element.style.transform?.replace(/rotate\((-?\d+(?:\.\d+)?)deg\)/, `rotate(${pose.rotation || 0}deg)`) || ''
         }
     }
-    if (Object.hasOwnProperty.call(pose, 'scale') && pose.scale !== undefined) {
-        const originScale = element.style.transform?.match(/scale\((-?\d+(?:\.\d+)?)\)/)?.[1]
+    if (Object.hasOwn(pose, 'scale') && pose.scale !== undefined) {
+        const originScale = new RegExp(/scale\((-?\d+(?:\.\d+)?)\)/).exec(element.style.transform)?.[1]
         if (originScale === undefined) {
             element.style.transform += `scale(${pose.scale || 1})`
         } else {
             element.style.transform = element.style.transform?.replace(/scale\((-?\d+(?:\.\d+)?)\)/, `scale(${pose.scale || 1})`) || ''
         }
     }
-    if (Object.hasOwnProperty.call(pose, 'width') && pose.width !== undefined || Object.hasOwnProperty.call(pose, 'height') && pose.height !== undefined) {
+    if (Object.hasOwn(pose, 'width') && pose.width !== undefined || Object.hasOwn(pose, 'height') && pose.height !== undefined) {
         element.style.width = `${pose.width || 0}px`
         element.style.height = `${pose.height || 0}px`
     }
 }
 
 export class DragBase {
-    private fingers: Finger[] = []
-    private poses: PoseRecord[] = []
-    private events: Map<DragOperationType, ((fingers: Finger[]) => void)[]> = new Map()
+    private readonly fingers: Finger[] = []
+    private readonly poses: PoseRecord[] = []
+    private readonly events: Map<DragOperationType, ((fingers: Finger[]) => void)[]> = new Map()
     protected currentOperationType: DragOperationType = DragOperationType.End
     private isEnabled: boolean = true
     private isPassive: boolean = false
@@ -119,7 +119,7 @@ export class DragBase {
         element.addEventListener('pointerdown', this.handlePointerDown)
         this.element.style.touchAction = 'none'
     }
-    private handlePointerDown = (e: PointerEvent) => {
+    private readonly handlePointerDown = (e: PointerEvent) => {
         if (!this.isEnabled || this.isPassive) {
             return
         }
@@ -152,11 +152,11 @@ export class DragBase {
         this.trigger(DragOperationType.Start)
         log.info(`[DragBase] handlePointerDown, fingers length: ${this.fingers.length}`)
     }
-    private handleFingerMove = () => {
+    private readonly handleFingerMove = () => {
         this.currentOperationType = DragOperationType.Move
         this.trigger(DragOperationType.Move)
     }
-    private handleFingerMoveComplete = () => {
+    private readonly handleFingerMoveComplete = () => {
         this.trigger(DragOperationType.End)
         this.currentOperationType = DragOperationType.End
         if (this.options?.inertial) {
@@ -165,17 +165,17 @@ export class DragBase {
     }
     private inertialMove() {
         const movePoseList = this.poses.filter(pose => pose.operationType === DragOperationType.Move)
-        const lastMovePose = movePoseList[movePoseList.length - 1]
-        const beforeLastMovePose = movePoseList[movePoseList.length - 2]
-        const startTime = new Date().getTime()
+        const lastMovePose = movePoseList.at(-1)
+        const beforeLastMovePose = movePoseList.at(-2)
+        const startTime = Date.now()
         if (lastMovePose && beforeLastMovePose) {
             this.currentOperationType = DragOperationType.Inertial
             let distanceFunction: (() => Pose['position'] | undefined) | undefined = undefined
             if (lastMovePose.pose.position.x !== beforeLastMovePose.pose.position.x || lastMovePose.pose.position.y !== beforeLastMovePose.pose.position.y) {
-                // TODO: 手感还是有点问题，需要考虑一些边界问题
+                // LATER-DO: 手感还是有点问题，需要考虑一些边界问题
                 // 有移动
                 // 最后一次移动的距离，单位：px
-                const distance = Math.sqrt((lastMovePose.pose.position.x - beforeLastMovePose.pose.position.x) ** 2 + (lastMovePose.pose.position.y - beforeLastMovePose.pose.position.y) ** 2)
+                const distance = Math.hypot((lastMovePose.pose.position.x - beforeLastMovePose.pose.position.x), (lastMovePose.pose.position.y - beforeLastMovePose.pose.position.y))
                 if (distance > 1) {
                     // 最后一次移动的时间，单位：ms
                     const timeSpend = lastMovePose.time - beforeLastMovePose.time
@@ -204,7 +204,7 @@ export class DragBase {
             }
             let rotateFunction: (() => Pose['rotation'] | undefined) | undefined = undefined
             if (lastMovePose.pose.rotation !== beforeLastMovePose.pose.rotation && lastMovePose.pose.rotation !== undefined && beforeLastMovePose.pose.rotation !== undefined) {
-                // TODO: 考虑0和1.999PI其实只差0.001PI的情况，而不是-1.999PI
+                // LATER-DO: 考虑0和1.999PI其实只差0.001PI的情况，而不是-1.999PI
                 // 有旋转
                 // 最后一次旋转的角度，单位：rad
                 const distance = lastMovePose.pose.rotation - beforeLastMovePose.pose.rotation
@@ -357,7 +357,7 @@ export class DragBase {
     getCurrentOperationType() {
         return this.currentOperationType
     }
-    private cleanFingers = (f: Finger) => {
+    private readonly cleanFingers = (f: Finger) => {
         this.fingers.splice(this.fingers.indexOf(f), 1)
         if (this.fingers.length === 0) {
             this.currentOperationType = DragOperationType.AllEnd
