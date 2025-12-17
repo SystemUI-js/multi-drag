@@ -87,9 +87,5 @@ export class Rotate extends DragBase {
         const newPose = { rotation: initialRotation + angle }
         this.setPose(this.element, newPose, DragOperationType.End)
     }
-    handleInertialEnd = () => {
-        // if (this.lastPose && this.initialPose) {
-        //     this.setPose(this.element, this.lastPose, DragOperationType.InertialEnd)
-        // }
-    }
+    handleInertialEnd = () => {}
 }
