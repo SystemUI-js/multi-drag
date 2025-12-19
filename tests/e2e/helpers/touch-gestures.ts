@@ -19,72 +19,75 @@ export class TouchGestureHelper {
     const initialDistance = 40
     const finalDistance = initialDistance * scaleFactor
 
-    await this.page.evaluate(async (params) => {
-      const el = document.querySelector(params.selector) as HTMLElement
-      if (!el) return
+    await this.page.evaluate(
+      async (params) => {
+        const el = document.querySelector(params.selector) as HTMLElement
+        if (!el) return
 
-      // 双指初始位置（水平排列）
-      const touch1Start = {
-        clientX: params.centerX - params.initialDistance / 2,
-        clientY: params.centerY
+        // 双指初始位置（水平排列）
+        const touch1Start = {
+          clientX: params.centerX - params.initialDistance / 2,
+          clientY: params.centerY
+        }
+        const touch2Start = {
+          clientX: params.centerX + params.initialDistance / 2,
+          clientY: params.centerY
+        }
+
+        // 双指最终位置
+        const touch1End = {
+          clientX: params.centerX - params.finalDistance / 2,
+          clientY: params.centerY
+        }
+        const touch2End = {
+          clientX: params.centerX + params.finalDistance / 2,
+          clientY: params.centerY
+        }
+
+        // 开始触摸
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            new Touch({ identifier: 1, target: el, ...touch1Start }),
+            new Touch({ identifier: 2, target: el, ...touch2Start })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        el.dispatchEvent(touchStartEvent)
+
+        // 等待一小段时间
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        // 移动触摸点（缩放手势）
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [
+            new Touch({ identifier: 1, target: el, ...touch1End }),
+            new Touch({ identifier: 2, target: el, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchMoveEvent)
+
+        // 结束触摸
+        const touchEndEvent = new TouchEvent('touchend', {
+          changedTouches: [
+            new Touch({ identifier: 1, target: el, ...touch1End }),
+            new Touch({ identifier: 2, target: el, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchEndEvent)
+      },
+      {
+        selector: await this.getElementSelector(element),
+        centerX,
+        centerY,
+        initialDistance,
+        finalDistance
       }
-      const touch2Start = {
-        clientX: params.centerX + params.initialDistance / 2,
-        clientY: params.centerY
-      }
-
-      // 双指最终位置
-      const touch1End = {
-        clientX: params.centerX - params.finalDistance / 2,
-        clientY: params.centerY
-      }
-      const touch2End = {
-        clientX: params.centerX + params.finalDistance / 2,
-        clientY: params.centerY
-      }
-
-      // 开始触摸
-      const touchStartEvent = new TouchEvent('touchstart', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touch1Start }),
-          new Touch({ identifier: 2, target: el, ...touch2Start })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      el.dispatchEvent(touchStartEvent)
-
-      // 等待一小段时间
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      // 移动触摸点（缩放手势）
-      const touchMoveEvent = new TouchEvent('touchmove', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touch1End }),
-          new Touch({ identifier: 2, target: el, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchMoveEvent)
-
-      // 结束触摸
-      const touchEndEvent = new TouchEvent('touchend', {
-        changedTouches: [
-          new Touch({ identifier: 1, target: el, ...touch1End }),
-          new Touch({ identifier: 2, target: el, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchEndEvent)
-    }, {
-      selector: await this.getElementSelector(element),
-      centerX,
-      centerY,
-      initialDistance,
-      finalDistance
-    })
+    )
   }
 
   /**
@@ -100,72 +103,75 @@ export class TouchGestureHelper {
     const centerY = box.y + box.height / 2
     const radius = 30
 
-    await this.page.evaluate(async (params) => {
-      const el = document.querySelector(params.selector) as HTMLElement
-      if (!el) return
+    await this.page.evaluate(
+      async (params) => {
+        const el = document.querySelector(params.selector) as HTMLElement
+        if (!el) return
 
-      // 初始双指位置（水平排列）
-      const touch1Start = {
-        clientX: params.centerX - params.radius,
-        clientY: params.centerY
+        // 初始双指位置（水平排列）
+        const touch1Start = {
+          clientX: params.centerX - params.radius,
+          clientY: params.centerY
+        }
+        const touch2Start = {
+          clientX: params.centerX + params.radius,
+          clientY: params.centerY
+        }
+
+        // 旋转后的双指位置
+        const angleRad = (params.angleDegrees * Math.PI) / 180
+        const touch1End = {
+          clientX: params.centerX - params.radius * Math.cos(angleRad),
+          clientY: params.centerY - params.radius * Math.sin(angleRad)
+        }
+        const touch2End = {
+          clientX: params.centerX + params.radius * Math.cos(angleRad),
+          clientY: params.centerY + params.radius * Math.sin(angleRad)
+        }
+
+        // 开始触摸
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            new Touch({ identifier: 1, target: el, ...touch1Start }),
+            new Touch({ identifier: 2, target: el, ...touch2Start })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        el.dispatchEvent(touchStartEvent)
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        // 旋转手势
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [
+            new Touch({ identifier: 1, target: el, ...touch1End }),
+            new Touch({ identifier: 2, target: el, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchMoveEvent)
+
+        // 结束触摸
+        const touchEndEvent = new TouchEvent('touchend', {
+          changedTouches: [
+            new Touch({ identifier: 1, target: el, ...touch1End }),
+            new Touch({ identifier: 2, target: el, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchEndEvent)
+      },
+      {
+        selector: await this.getElementSelector(element),
+        centerX,
+        centerY,
+        radius,
+        angleDegrees
       }
-      const touch2Start = {
-        clientX: params.centerX + params.radius,
-        clientY: params.centerY
-      }
-
-      // 旋转后的双指位置
-      const angleRad = (params.angleDegrees * Math.PI) / 180
-      const touch1End = {
-        clientX: params.centerX - params.radius * Math.cos(angleRad),
-        clientY: params.centerY - params.radius * Math.sin(angleRad)
-      }
-      const touch2End = {
-        clientX: params.centerX + params.radius * Math.cos(angleRad),
-        clientY: params.centerY + params.radius * Math.sin(angleRad)
-      }
-
-      // 开始触摸
-      const touchStartEvent = new TouchEvent('touchstart', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touch1Start }),
-          new Touch({ identifier: 2, target: el, ...touch2Start })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      el.dispatchEvent(touchStartEvent)
-
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      // 旋转手势
-      const touchMoveEvent = new TouchEvent('touchmove', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touch1End }),
-          new Touch({ identifier: 2, target: el, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchMoveEvent)
-
-      // 结束触摸
-      const touchEndEvent = new TouchEvent('touchend', {
-        changedTouches: [
-          new Touch({ identifier: 1, target: el, ...touch1End }),
-          new Touch({ identifier: 2, target: el, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchEndEvent)
-    }, {
-      selector: await this.getElementSelector(element),
-      centerX,
-      centerY,
-      radius,
-      angleDegrees
-    })
+    )
   }
 
   /**
@@ -181,57 +187,56 @@ export class TouchGestureHelper {
     const startX = box.x + box.width / 2
     const startY = box.y + box.height / 2
 
-    await this.page.evaluate(async (params) => {
-      const el = document.querySelector(params.selector) as HTMLElement
-      if (!el) return
+    await this.page.evaluate(
+      async (params) => {
+        const el = document.querySelector(params.selector) as HTMLElement
+        if (!el) return
 
-      const touchStart = {
-        clientX: params.startX,
-        clientY: params.startY
+        const touchStart = {
+          clientX: params.startX,
+          clientY: params.startY
+        }
+        const touchEnd = {
+          clientX: params.startX + params.deltaX,
+          clientY: params.startY + params.deltaY
+        }
+
+        // 开始触摸
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [new Touch({ identifier: 1, target: el, ...touchStart })],
+          bubbles: true,
+          cancelable: true
+        })
+        el.dispatchEvent(touchStartEvent)
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        // 拖拽
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [new Touch({ identifier: 1, target: el, ...touchEnd })],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchMoveEvent)
+
+        // 结束触摸
+        const touchEndEvent = new TouchEvent('touchend', {
+          changedTouches: [
+            new Touch({ identifier: 1, target: el, ...touchEnd })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchEndEvent)
+      },
+      {
+        selector: await this.getElementSelector(element),
+        startX,
+        startY,
+        deltaX,
+        deltaY
       }
-      const touchEnd = {
-        clientX: params.startX + params.deltaX,
-        clientY: params.startY + params.deltaY
-      }
-
-      // 开始触摸
-      const touchStartEvent = new TouchEvent('touchstart', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touchStart })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      el.dispatchEvent(touchStartEvent)
-
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      // 拖拽
-      const touchMoveEvent = new TouchEvent('touchmove', {
-        touches: [
-          new Touch({ identifier: 1, target: el, ...touchEnd })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchMoveEvent)
-
-      // 结束触摸
-      const touchEndEvent = new TouchEvent('touchend', {
-        changedTouches: [
-          new Touch({ identifier: 1, target: el, ...touchEnd })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchEndEvent)
-    }, {
-      selector: await this.getElementSelector(element),
-      startX,
-      startY,
-      deltaX,
-      deltaY
-    })
+    )
   }
 
   /**

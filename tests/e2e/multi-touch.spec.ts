@@ -18,7 +18,9 @@ test.describe('多点触摸操作测试', () => {
     // 检查三个可拖拽项目
     await expect(page.locator('#item1')).toContainText('Item 1 (Scale Only)')
     await expect(page.locator('#item2')).toContainText('Item 2 (Drag)')
-    await expect(page.locator('#item3')).toContainText('Item 3 (Rotate+Scale with Touch)')
+    await expect(page.locator('#item3')).toContainText(
+      'Item 3 (Rotate+Scale with Touch)'
+    )
 
     // 检查元素初始位置
     const item1 = page.locator('#item1')
@@ -59,8 +61,8 @@ test.describe('多点触摸操作测试', () => {
     const item1 = page.locator('#item1')
 
     // 获取初始变换
-    const initialTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 模拟双指缩放手势 - 使用两个连续的触摸事件
@@ -71,59 +73,74 @@ test.describe('多点触摸操作测试', () => {
     const centerY = box!.y + box!.height / 2
 
     // 模拟双指从中心向外扩展的手势
-    await page.evaluate(async (coords) => {
-      const element = document.getElementById('item1')!
+    await page.evaluate(
+      async (coords) => {
+        const element = document.getElementById('item1')!
 
-      // 创建两个触摸点（模拟双指）
-      const touch1Start = { clientX: coords.centerX - 20, clientY: coords.centerY }
-      const touch2Start = { clientX: coords.centerX + 20, clientY: coords.centerY }
+        // 创建两个触摸点（模拟双指）
+        const touch1Start = {
+          clientX: coords.centerX - 20,
+          clientY: coords.centerY
+        }
+        const touch2Start = {
+          clientX: coords.centerX + 20,
+          clientY: coords.centerY
+        }
 
-      const touch1End = { clientX: coords.centerX - 40, clientY: coords.centerY }
-      const touch2End = { clientX: coords.centerX + 40, clientY: coords.centerY }
+        const touch1End = {
+          clientX: coords.centerX - 40,
+          clientY: coords.centerY
+        }
+        const touch2End = {
+          clientX: coords.centerX + 40,
+          clientY: coords.centerY
+        }
 
-      // 触发 touchstart 事件
-      const touchStartEvent = new TouchEvent('touchstart', {
-        touches: [
-          new Touch({ identifier: 1, target: element, ...touch1Start }),
-          new Touch({ identifier: 2, target: element, ...touch2Start })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      element.dispatchEvent(touchStartEvent)
+        // 触发 touchstart 事件
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            new Touch({ identifier: 1, target: element, ...touch1Start }),
+            new Touch({ identifier: 2, target: element, ...touch2Start })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        element.dispatchEvent(touchStartEvent)
 
-      // 等待一小段时间
-      await new Promise(resolve => setTimeout(resolve, 50))
+        // 等待一小段时间
+        await new Promise((resolve) => setTimeout(resolve, 50))
 
-      // 触发 touchmove 事件（扩展手势）
-      const touchMoveEvent = new TouchEvent('touchmove', {
-        touches: [
-          new Touch({ identifier: 1, target: element, ...touch1End }),
-          new Touch({ identifier: 2, target: element, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchMoveEvent)
+        // 触发 touchmove 事件（扩展手势）
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [
+            new Touch({ identifier: 1, target: element, ...touch1End }),
+            new Touch({ identifier: 2, target: element, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchMoveEvent)
 
-      // 触发 touchend 事件
-      const touchEndEvent = new TouchEvent('touchend', {
-        changedTouches: [
-          new Touch({ identifier: 1, target: element, ...touch1End }),
-          new Touch({ identifier: 2, target: element, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchEndEvent)
-    }, { centerX, centerY })
+        // 触发 touchend 事件
+        const touchEndEvent = new TouchEvent('touchend', {
+          changedTouches: [
+            new Touch({ identifier: 1, target: element, ...touch1End }),
+            new Touch({ identifier: 2, target: element, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchEndEvent)
+      },
+      { centerX, centerY }
+    )
 
     // 等待手势处理完成
     await page.waitForTimeout(200)
 
     // 检查变换是否发生变化
-    const finalTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 变换应该发生变化（缩放操作）
@@ -134,8 +151,8 @@ test.describe('多点触摸操作测试', () => {
     const item3 = page.locator('#item3')
 
     // 获取初始变换
-    const initialTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 模拟双指旋转手势
@@ -146,59 +163,74 @@ test.describe('多点触摸操作测试', () => {
     const centerY = box!.y + box!.height / 2
 
     // 模拟双指旋转手势
-    await page.evaluate(async (coords) => {
-      const element = document.getElementById('item3')!
+    await page.evaluate(
+      async (coords) => {
+        const element = document.getElementById('item3')!
 
-      // 创建两个触摸点（水平排列）
-      const touch1Start = { clientX: coords.centerX - 30, clientY: coords.centerY }
-      const touch2Start = { clientX: coords.centerX + 30, clientY: coords.centerY }
+        // 创建两个触摸点（水平排列）
+        const touch1Start = {
+          clientX: coords.centerX - 30,
+          clientY: coords.centerY
+        }
+        const touch2Start = {
+          clientX: coords.centerX + 30,
+          clientY: coords.centerY
+        }
 
-      // 旋转到垂直排列，同时稍微扩展（旋转+缩放）
-      const touch1End = { clientX: coords.centerX, clientY: coords.centerY - 40 }
-      const touch2End = { clientX: coords.centerX, clientY: coords.centerY + 40 }
+        // 旋转到垂直排列，同时稍微扩展（旋转+缩放）
+        const touch1End = {
+          clientX: coords.centerX,
+          clientY: coords.centerY - 40
+        }
+        const touch2End = {
+          clientX: coords.centerX,
+          clientY: coords.centerY + 40
+        }
 
-      // 触发 touchstart 事件
-      const touchStartEvent = new TouchEvent('touchstart', {
-        touches: [
-          new Touch({ identifier: 1, target: element, ...touch1Start }),
-          new Touch({ identifier: 2, target: element, ...touch2Start })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      element.dispatchEvent(touchStartEvent)
+        // 触发 touchstart 事件
+        const touchStartEvent = new TouchEvent('touchstart', {
+          touches: [
+            new Touch({ identifier: 1, target: element, ...touch1Start }),
+            new Touch({ identifier: 2, target: element, ...touch2Start })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        element.dispatchEvent(touchStartEvent)
 
-      await new Promise(resolve => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 50))
 
-      // 触发 touchmove 事件（旋转+缩放手势）
-      const touchMoveEvent = new TouchEvent('touchmove', {
-        touches: [
-          new Touch({ identifier: 1, target: element, ...touch1End }),
-          new Touch({ identifier: 2, target: element, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchMoveEvent)
+        // 触发 touchmove 事件（旋转+缩放手势）
+        const touchMoveEvent = new TouchEvent('touchmove', {
+          touches: [
+            new Touch({ identifier: 1, target: element, ...touch1End }),
+            new Touch({ identifier: 2, target: element, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchMoveEvent)
 
-      // 触发 touchend 事件
-      const touchEndEvent = new TouchEvent('touchend', {
-        changedTouches: [
-          new Touch({ identifier: 1, target: element, ...touch1End }),
-          new Touch({ identifier: 2, target: element, ...touch2End })
-        ],
-        bubbles: true,
-        cancelable: true
-      })
-      document.dispatchEvent(touchEndEvent)
-    }, { centerX, centerY })
+        // 触发 touchend 事件
+        const touchEndEvent = new TouchEvent('touchend', {
+          changedTouches: [
+            new Touch({ identifier: 1, target: element, ...touch1End }),
+            new Touch({ identifier: 2, target: element, ...touch2End })
+          ],
+          bubbles: true,
+          cancelable: true
+        })
+        document.dispatchEvent(touchEndEvent)
+      },
+      { centerX, centerY }
+    )
 
     // 等待手势处理完成
     await page.waitForTimeout(200)
 
     // 检查变换是否发生变化
-    const finalTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 变换应该发生变化（旋转+缩放操作）
@@ -235,19 +267,39 @@ test.describe('多点触摸操作测试', () => {
       // 简单的双指扩展手势
       const touchStartEvent = new TouchEvent('touchstart', {
         touches: [
-          new Touch({ identifier: 1, target: element, clientX: centerX - 15, clientY: centerY }),
-          new Touch({ identifier: 2, target: element, clientX: centerX + 15, clientY: centerY })
+          new Touch({
+            identifier: 1,
+            target: element,
+            clientX: centerX - 15,
+            clientY: centerY
+          }),
+          new Touch({
+            identifier: 2,
+            target: element,
+            clientX: centerX + 15,
+            clientY: centerY
+          })
         ],
         bubbles: true
       })
       element.dispatchEvent(touchStartEvent)
 
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, 50))
 
       const touchMoveEvent = new TouchEvent('touchmove', {
         touches: [
-          new Touch({ identifier: 1, target: element, clientX: centerX - 25, clientY: centerY }),
-          new Touch({ identifier: 2, target: element, clientX: centerX + 25, clientY: centerY })
+          new Touch({
+            identifier: 1,
+            target: element,
+            clientX: centerX - 25,
+            clientY: centerY
+          }),
+          new Touch({
+            identifier: 2,
+            target: element,
+            clientX: centerX + 25,
+            clientY: centerY
+          })
         ],
         bubbles: true
       })
@@ -255,8 +307,18 @@ test.describe('多点触摸操作测试', () => {
 
       const touchEndEvent = new TouchEvent('touchend', {
         changedTouches: [
-          new Touch({ identifier: 1, target: element, clientX: centerX - 25, clientY: centerY }),
-          new Touch({ identifier: 2, target: element, clientX: centerX + 25, clientY: centerY })
+          new Touch({
+            identifier: 1,
+            target: element,
+            clientX: centerX - 25,
+            clientY: centerY
+          }),
+          new Touch({
+            identifier: 2,
+            target: element,
+            clientX: centerX + 25,
+            clientY: centerY
+          })
         ],
         bubbles: true
       })
@@ -277,7 +339,7 @@ test.describe('多点触摸操作测试', () => {
     const consoleMessages: string[] = []
 
     // 监听控制台消息
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       if (msg.type() === 'log') {
         consoleMessages.push(msg.text())
       }
@@ -288,12 +350,15 @@ test.describe('多点触摸操作测试', () => {
     await page.waitForSelector('#item1')
 
     // 验证初始化日志
-    expect(consoleMessages.some(msg =>
-      msg.includes('多手势应用初始化完成')
-    )).toBeTruthy()
+    expect(
+      consoleMessages.some((msg) => msg.includes('多手势应用初始化完成'))
+    ).toBeTruthy()
 
-    expect(consoleMessages.some(msg =>
-      msg.includes('纯缩放触点跟随') && msg.includes('只缩放，不旋转')
-    )).toBeTruthy()
+    expect(
+      consoleMessages.some(
+        (msg) =>
+          msg.includes('纯缩放触点跟随') && msg.includes('只缩放，不旋转')
+      )
+    ).toBeTruthy()
   })
 })

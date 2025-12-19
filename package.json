@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
-    "@system-ui-js/development-base": "^0.0.4",
+    "@system-ui-js/development-base": "^0.0.7",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.20",
     "@types/node": "^20.5.0",

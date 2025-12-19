@@ -40,7 +40,7 @@ export class Drag extends DragBase {
         }
         return null
       })
-      .filter((item) => item !== null) as Point[]
+      .filter((item) => item !== null)
     const initialPosition = this.initialPosition
     let newPositionX = initialPosition.x
     let newPositionY = initialPosition.y

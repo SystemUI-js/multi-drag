@@ -164,9 +164,9 @@ export class Finger {
   getLastOperation(type?: FingerOperationType): FingerPathItem | undefined {
     if (type) {
       const items = this.path.filter((item) => item.type === type)
-      return items[items.length - 1]
+      return items.at(-1)
     }
-    return this.path[this.path.length - 1]
+    return this.path.at(-1)
   }
   destroy() {
     document.removeEventListener(

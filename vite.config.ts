@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
-import { resolve } from 'path'
+import { resolve } from 'node:path'
 
 // Custom plugin to move scripts to body
 const moveScriptsToBody = () => {
@@ -15,7 +15,7 @@ const moveScriptsToBody = () => {
       )
 
       // Remove script tags from head
-      let newHtml = html.replace(
+      let newHtml = html.replaceAll(
         /<script[^>]*type="module"[^>]*>[\s\S]*?<\/script>/gi,
         ''
       )
