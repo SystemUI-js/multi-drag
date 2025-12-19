@@ -17,8 +17,8 @@ test.describe('高级多点触摸手势测试', () => {
     const item1 = page.locator('#item1')
 
     // 获取初始变换
-    const initialTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 执行缩放手势（放大2倍）
@@ -26,8 +26,8 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.waitForGestureComplete()
 
     // 检查变换是否发生变化
-    const finalTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     expect(finalTransform).not.toBe(initialTransform)
@@ -43,16 +43,16 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.pinchToZoom(item1, 2.0)
     await touchHelper.waitForGestureComplete()
 
-    const afterZoomInTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const afterZoomInTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 然后缩小
     await touchHelper.pinchToZoom(item1, 0.5)
     await touchHelper.waitForGestureComplete()
 
-    const afterZoomOutTransform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const afterZoomOutTransform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 两次变换应该不同
@@ -83,8 +83,8 @@ test.describe('高级多点触摸手势测试', () => {
     const item3 = page.locator('#item3')
 
     // 获取初始变换
-    const initialTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 执行旋转手势（45度）
@@ -92,8 +92,8 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.waitForGestureComplete()
 
     // 检查变换是否发生变化
-    const finalTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     expect(finalTransform).not.toBe(initialTransform)
@@ -105,24 +105,24 @@ test.describe('高级多点触摸手势测试', () => {
   test('Item3 - 复合手势测试（旋转+缩放）', async ({ page }) => {
     const item3 = page.locator('#item3')
 
-    const initialTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const initialTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 先执行旋转
     await touchHelper.rotateGesture(item3, 30)
     await touchHelper.waitForGestureComplete()
 
-    const afterRotateTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const afterRotateTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 再执行缩放
     await touchHelper.pinchToZoom(item3, 1.5)
     await touchHelper.waitForGestureComplete()
 
-    const finalTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 每次操作都应该产生变化
@@ -140,15 +140,12 @@ test.describe('高级多点触摸手势测试', () => {
     const item3 = page.locator('#item3')
 
     // 获取所有元素的初始状态
-    const [
-      item1InitialTransform,
-      item2InitialBox,
-      item3InitialTransform
-    ] = await Promise.all([
-      item1.evaluate((el) => window.getComputedStyle(el).transform),
-      item2.boundingBox(),
-      item3.evaluate((el) => window.getComputedStyle(el).transform)
-    ])
+    const [item1InitialTransform, item2InitialBox, item3InitialTransform] =
+      await Promise.all([
+        item1.evaluate((el) => window.getComputedStyle(el).transform),
+        item2.boundingBox(),
+        item3.evaluate((el) => window.getComputedStyle(el).transform)
+      ])
 
     // 连续快速操作多个元素
     await touchHelper.pinchToZoom(item1, 1.5)
@@ -161,15 +158,12 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.waitForGestureComplete()
 
     // 检查所有元素都发生了变化
-    const [
-      item1FinalTransform,
-      item2FinalBox,
-      item3FinalTransform
-    ] = await Promise.all([
-      item1.evaluate((el) => window.getComputedStyle(el).transform),
-      item2.boundingBox(),
-      item3.evaluate((el) => window.getComputedStyle(el).transform)
-    ])
+    const [item1FinalTransform, item2FinalBox, item3FinalTransform] =
+      await Promise.all([
+        item1.evaluate((el) => window.getComputedStyle(el).transform),
+        item2.boundingBox(),
+        item3.evaluate((el) => window.getComputedStyle(el).transform)
+      ])
 
     // 验证所有元素都发生了变化
     expect(item1FinalTransform).not.toBe(item1InitialTransform)
@@ -187,8 +181,8 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.pinchToZoom(item1, 0.1)
     await touchHelper.waitForGestureComplete()
 
-    let transform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    let transform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 应该仍然有有效的变换
@@ -198,8 +192,8 @@ test.describe('高级多点触摸手势测试', () => {
     await touchHelper.pinchToZoom(item1, 5.0)
     await touchHelper.waitForGestureComplete()
 
-    transform = await item1.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    transform = await item1.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
 
     // 应该仍然有有效的变换
@@ -224,8 +218,8 @@ test.describe('高级多点触摸手势测试', () => {
     expect(duration).toBeLessThan(3000)
 
     // 元素应该仍然响应
-    const finalTransform = await item3.evaluate((el) =>
-      window.getComputedStyle(el).transform
+    const finalTransform = await item3.evaluate(
+      (el) => window.getComputedStyle(el).transform
     )
     expect(finalTransform).toMatch(/matrix|rotate/)
   })

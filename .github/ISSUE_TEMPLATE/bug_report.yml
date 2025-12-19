@@ -1,0 +1,107 @@
+name: "🐞 Bug 报告 (Bug Report)"
+description: 提交一个 Bug 报告来帮助我们改进（Commit a bug report to help us improve）
+title: "[Bug]: "
+labels: ["bug"]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              感谢你花时间填写这份报告！请尽可能详细地描述问题。
+              (Thanks for taking the time to fill out this report! Please describe the issue in as much detail as possible.)
+    - type: textarea
+      id: description
+      attributes:
+          label: 描述一下 (Describe the bug)
+          description: 请清晰简洁地描述这个Bug。 (A clear and concise description of what the bug is.)
+          placeholder: "我尝试做... 结果... 发生了...（I tried to do... and the result... something went wrong.）"
+      validations:
+          required: true
+    - type: textarea
+      id: reproduction
+      attributes:
+          label: 如何复现 (To Reproduce)
+          description: 请提供详细的复现步骤。 (Steps to reproduce the behavior.)
+          placeholder: |
+              1. 访问页面 '...'（Go to '...'）
+              2. 点击按钮 '....'（Click on '....'）
+              3. 滚动到 '....'（Scroll down to '....'）
+              4. 看到错误 '...'（Error appears '...'）
+      validations:
+          required: true
+    - type: textarea
+      id: expected-behavior
+      attributes:
+          label: 预期表现 (Expected behavior)
+          description: 请清晰简洁地描述你实际预期中的表现。 (A clear and concise description of what you expected to happen.)
+          placeholder: "我预期... 应该发生。（I expected... to happen.）"
+      validations:
+          required: true
+    - type: textarea
+      id: screenshots
+      attributes:
+          label: 截图 (Screenshots)
+          description: 如果可以的话，贴几张截图最好啦。你可以直接拖拽或粘贴图片到这里。(If applicable, add screenshots. You can drag & drop or paste images here.)
+      validations:
+          required: false
+    - type: markdown
+      attributes:
+          value: "### 💻 电脑环境 (Desktop Environment)"
+    - type: input
+      id: os-desktop
+      attributes:
+          label: 操作系统 (OS)
+          placeholder: "e.g. Windows 11 / macOS 13.0"
+      validations:
+          required: false
+    - type: input
+      id: browser-desktop
+      attributes:
+          label: 浏览器名称 (Browser)
+          placeholder: "e.g. Chrome, Safari, Edge"
+      validations:
+          required: false
+    - type: input
+      id: browser-version-desktop
+      attributes:
+          label: 浏览器版本 (Version)
+          placeholder: "e.g. 108.0.5359.125"
+      validations:
+          required: false
+    - type: markdown
+      attributes:
+          value: "### 📱 手机环境 (Smartphone Environment)"
+    - type: input
+      id: device-mobile
+      attributes:
+          label: 设备名称 (Device)
+          placeholder: "e.g. iPhone 14 Pro / Google Pixel 7"
+      validations:
+          required: false
+    - type: input
+      id: os-mobile
+      attributes:
+          label: 系统名称以及系统版本 (OS)
+          placeholder: "e.g. iOS 16.2 / Android 13"
+      validations:
+          required: false
+    - type: input
+      id: browser-mobile
+      attributes:
+          label: 浏览器名称 (Browser)
+          placeholder: "e.g. Safari, Chrome, Stock Browser"
+      validations:
+          required: false
+    - type: input
+      id: browser-version-mobile
+      attributes:
+          label: 浏览器版本 (Version)
+          placeholder: "e.g. 22"
+      validations:
+          required: false
+    - type: textarea
+      id: additional-context
+      attributes:
+          label: 其他附加内容 (Additional context)
+          description: 如果有其他附加信息，请在这里描述。(Add any other context about the problem here.)
+      validations:
+          required: false

@@ -1,5 +1,7 @@
 # 多指操作库（Multi Drag Project）
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/SystemUI-js/multi-drag?utm_source=oss&utm_medium=github&utm_campaign=SystemUI-js%2Fmulti-drag&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 一个功能强大、灵活的前端多指拖拽操作库，支持多元素同时拖拽、旋转和缩放，同时提供完整的TypeScript类型支持。
 
 ## 🎯 核心特性
@@ -16,9 +18,53 @@
 
 ## 📺 演示
 
+通过以下代码就可以实现多个元素同时拖拽
+
+```typescript
+const drag1 = new Mixin(item1, {}, [MixinType.Drag, MixinType.Scale])
+
+const drag2 = new Mixin(item2, {}, [MixinType.Rotate, MixinType.Scale])
+
+const drag3 = new Mixin(item3, {}, [MixinType.Drag, MixinType.Rotate, MixinType.Scale])
+```
+
 ![DEMO](https://github.com/SystemUI-js/multi-drag/raw/main/assets/demo.gif)
 
-[在线演示](https://systemui-js.github.io/multi-drag/)
+通过以下代码就可以实现双摇杆功能
+
+```typescript
+const limit75 = (element: HTMLElement, pose: Partial<Pose>) => {
+    // 拖动不能超过原来中心75px
+    const center = { x: 50, y: 50 }
+    const { position } = pose
+    if (position) {
+        const newPosition = { x: position.x, y: position.y }
+        const distance = Math.sqrt(Math.pow(center.x - newPosition.x, 2) + Math.pow(center.y - newPosition.y, 2))
+        if (distance > 75) {
+            const ratio = distance / 75
+            newPosition.x = (position.x - center.x) / ratio + center.x
+            newPosition.y = (position.y - center.y) / ratio + center.y
+        }
+        defaultSetPose(element, { ...pose, position: newPosition })
+    }
+}
+const joystickGoBack = (ele: HTMLElement) => {
+    ele.style.left = '50px'
+    ele.style.top = '50px'
+}
+new Drag(joystick1, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
+})
+new Drag(joystick2, {
+    setPoseOnEnd: joystickGoBack,
+    setPose: limit75
+})
+```
+
+![DEMO2](https://github.com/SystemUI-js/multi-drag/raw/main/assets/demo2.gif)
+
+[在线演示](https://systemui-js.github.io/multi-drag/demo/)
 
 ## 📦 安装
 
@@ -41,8 +87,9 @@ import {
   Rotate,
   Mixin,
   MixinType,
-  getPoseFromElement,
-  applyPoseToElement
+  defaultSetPose,
+  defaultGetPose,
+  DragOperationType
 } from '@system-ui-js/multi-drag';
 ```
 
@@ -139,20 +186,28 @@ new Scale(element, options);
 
 ### 3. 工具函数
 
-#### getPoseFromElement
+#### defaultGetPose
 
-获取元素的当前位姿（位置、尺寸等信息）。
+获取元素的当前位姿（位置、尺寸等信息）的默认函数。
+
+默认是从元素的style属性中获取位姿信息。
+
+如果需要可以在`new Drag()`时的options中自定义获取位姿的函数。
 
 ```typescript
-function getPoseFromElement(element: HTMLElement): Pose;
+function defaultGetPose(element: HTMLElement): Pose;
 ```
 
-#### applyPoseToElement
+#### defaultSetPose
 
-将位姿应用到元素上。
+将位姿应用到元素上的默认函数。
+
+默认是将位姿信息应用到元素的style属性中。
+
+如果需要可以在`new Drag()`时的options中自定义设置位姿的函数。
 
 ```typescript
-function applyPoseToElement(element: HTMLElement, pose: Pose, options?: ApplyPoseOptions): void;
+function defaultSetPose(element: HTMLElement, pose: Pose): void;
 ```
 
 ### 4. 一些类型
@@ -276,3 +331,11 @@ npm run test:e2e
 - 对于复杂的手势组合，建议使用Mixin类以获得最佳体验
 - 惯性拖拽功能在性能受限设备上可能会有不同表现
 - 如有任何问题，请查看示例代码或提交Issue
+
+## 捐赠
+
+好心人！如果你恰好财力雄厚，麻烦支持一下，一个人在家写代码不容易~
+
+金额随缘，祝您发财！
+
+https://afdian.com/a/wszxdhr?tab=home

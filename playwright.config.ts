@@ -27,7 +27,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
 
     /* Record video on failure */
-    video: 'retain-on-failure',
+    video: 'retain-on-failure'
   },
 
   /* Configure projects for major browsers */
@@ -37,35 +37,35 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         // 启用触摸事件支持
-        hasTouch: true,
-      },
+        hasTouch: true
+      }
     },
 
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'],
-        hasTouch: true,
-      },
+        hasTouch: true
+      }
     },
 
     {
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
-        hasTouch: true,
-      },
+        hasTouch: true
+      }
     },
 
     /* Test against mobile viewports with touch support. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices['Pixel 5'] }
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
+      use: { ...devices['iPhone 12'] }
+    }
   ],
 
   /* Run your local dev server before starting the tests */
@@ -73,6 +73,6 @@ export default defineConfig({
     command: 'yarn dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+    timeout: 120 * 1000
+  }
 })
