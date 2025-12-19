@@ -34,5 +34,5 @@ if (!global.PointerEvent) {
       this.isPrimary = params.isPrimary || false
     }
   }
-  global.PointerEvent = PointerEvent as any
+  global.PointerEvent = PointerEvent as never
 }
