@@ -41,6 +41,9 @@ export class Drag extends DragBase {
         return null
       })
       .filter((item) => item !== null)
+    if (validFingerMovements.length === 0) {
+      return
+    }
     const initialPosition = this.initialPosition
     let newPositionX = initialPosition.x
     let newPositionY = initialPosition.y

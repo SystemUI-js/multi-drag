@@ -264,9 +264,9 @@ export class DragBase {
         lastMovePose.pose.rotation !== undefined &&
         beforeLastMovePose.pose.rotation !== undefined
       ) {
-        // LATER-DO: 考虑0和1.999PI其实只差0.001PI的情况，而不是-1.999PI
+        // LATER-DO: 考虑0度和359度其实只差1度的情况，而不是-359度
         // 有旋转
-        // 最后一次旋转的角度，单位：rad
+        // 最后一次旋转的角度，单位：deg
         const distance =
           lastMovePose.pose.rotation - beforeLastMovePose.pose.rotation
         // 最后一次缩放的时间，单位：ms
@@ -375,16 +375,10 @@ export class DragBase {
     if (this.options && type === DragOperationType.End) {
       if (this.options.setPoseOnEnd) {
         this.options.setPoseOnEnd(element, pose)
+        return
       }
-      return
     }
-    if (
-      this.options?.setPose ||
-      (this.options?.setPose &&
-        this.options &&
-        type === DragOperationType.End &&
-        !this.options?.setPoseOnEnd)
-    ) {
+    if (this.options?.setPose) {
       this.options.setPose(element, pose)
       return
     }

@@ -32,23 +32,23 @@ export class Rotate extends DragBase {
     const newPose = { rotation: initialRotation + angle }
     this.setPose(this.element, newPose, DragOperationType.Move)
   }
-  getAngleBySingleFingers(finger: Finger): number {
+  getAngleBySingleFingers(
+    finger: Finger,
+    operationType: FingerOperationType = FingerOperationType.Move
+  ): number {
     const globalPose = this.getGlobalPose(this.element)
     const center = {
       x: globalPose.position.x + globalPose.width / 2,
       y: globalPose.position.y + globalPose.height / 2
     }
-    if (!center) {
-      return 1
-    }
     const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
     const currentPoint = finger.getLastOperation(
-      FingerOperationType.Move
+      operationType
     )?.point
     if (startPoint && currentPoint) {
       return this.getAngleByTwoPoints(startPoint, center, currentPoint, center)
     }
-    return 1
+    return 0
   }
   getAngleByTwoPoints(
     startPoint1: Point,
@@ -70,11 +70,14 @@ export class Rotate extends DragBase {
       Math.atan2(startVector.y, startVector.x)
     return (angle * 180) / Math.PI
   }
-  getAngleByTwoFingers(fingers: Finger[]): number {
+  getAngleByTwoFingers(
+    fingers: Finger[],
+    operationType: FingerOperationType = FingerOperationType.Move
+  ): number {
     const finger1 = fingers[0]
     const finger2 = fingers[1]
     if (!finger1 || !finger2) {
-      return 1
+      return 0
     }
 
     const startPoint1 = finger1.getLastOperation(
@@ -84,10 +87,10 @@ export class Rotate extends DragBase {
       FingerOperationType.Start
     )?.point
     const currentPoint1 = finger1.getLastOperation(
-      FingerOperationType.Move
+      operationType
     )?.point
     const currentPoint2 = finger2.getLastOperation(
-      FingerOperationType.Move
+      operationType
     )?.point
     if (startPoint1 && startPoint2 && currentPoint1 && currentPoint2) {
       return this.getAngleByTwoPoints(
@@ -97,7 +100,7 @@ export class Rotate extends DragBase {
         currentPoint2
       )
     }
-    return 1
+    return 0
   }
   handleEnd = (fingers: Finger[]) => {
     const initialRotation = this.initialRotation || 0
@@ -106,8 +109,8 @@ export class Rotate extends DragBase {
     }
     const angle =
       fingers.length === 1
-        ? this.getAngleBySingleFingers(fingers[0])
-        : this.getAngleByTwoFingers(fingers)
+        ? this.getAngleBySingleFingers(fingers[0], FingerOperationType.End)
+        : this.getAngleByTwoFingers(fingers, FingerOperationType.End)
     const newPose = { rotation: initialRotation + angle }
     this.setPose(this.element, newPose, DragOperationType.End)
   }
