@@ -81,6 +81,7 @@ export function mockMouseMove(
   initPoint: Point,
   movePoint: Point
 ) {
+  // eslint-disable-next-line sonarjs/pseudo-random
   const pointerId = Math.floor(Math.random() * 1000000)
   element.dispatchEvent(
     new PointerEvent('pointerdown', {

@@ -42,9 +42,7 @@ export class Rotate extends DragBase {
       y: globalPose.position.y + globalPose.height / 2
     }
     const startPoint = finger.getLastOperation(FingerOperationType.Start)?.point
-    const currentPoint = finger.getLastOperation(
-      operationType
-    )?.point
+    const currentPoint = finger.getLastOperation(operationType)?.point
     if (startPoint && currentPoint) {
       return this.getAngleByTwoPoints(startPoint, center, currentPoint, center)
     }
@@ -86,12 +84,8 @@ export class Rotate extends DragBase {
     const startPoint2 = finger2.getLastOperation(
       FingerOperationType.Start
     )?.point
-    const currentPoint1 = finger1.getLastOperation(
-      operationType
-    )?.point
-    const currentPoint2 = finger2.getLastOperation(
-      operationType
-    )?.point
+    const currentPoint1 = finger1.getLastOperation(operationType)?.point
+    const currentPoint2 = finger2.getLastOperation(operationType)?.point
     if (startPoint1 && startPoint2 && currentPoint1 && currentPoint2) {
       return this.getAngleByTwoPoints(
         startPoint1,
