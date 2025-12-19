@@ -960,10 +960,10 @@
   dependencies:
     "@sinonjs/commons" "^3.0.1"
 
-"@system-ui-js/development-base@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@system-ui-js/development-base/-/development-base-0.0.7.tgz#47deafbafaef59b4efb80a3bff2a665a1dfd9935"
-  integrity sha512-giF625IALlwG6eqwb4yNMeLARmEaWD8wZk6kC1PE0ahEY/i7wUHKaKs/mO1yNPjHjHdPN7AZ6Xb9yOMWOKWcdg==
+"@system-ui-js/development-base@^0.0.8":
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/@system-ui-js/development-base/-/development-base-0.0.8.tgz#345fc6c768e9ca20d03e40f40a0059bb5508ff6c"
+  integrity sha512-UIq92tsB1E9NlnCDQCjalVX4VrHm50pkNinBtV2jta9MmFonD0QW6QLM2sAD89Es+AnZQIhb4UfY8Nk+IC4Vaw==
 
 "@tybys/wasm-util@^0.10.0":
   version "0.10.1"
