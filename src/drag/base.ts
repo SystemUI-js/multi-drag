@@ -56,8 +56,10 @@ function getInertialTimingFunction(initSpeed: number, deceleration: number) {
 }
 
 /**
- * 默认获取位姿的函数
- * @param element
+ * 从元素的当前样式与布局读取并返回其位姿（位置、旋转、缩放与尺寸）。
+ *
+ * @param element - 目标 HTMLElement
+ * @returns 包含以下字段的 Pose：`position`（x 和 y，单位为像素，从 style.left/top 读取并解析），`rotation`（以度为单位），`scale`（缩放因子），`width` 与 `height`（以像素为单位，来自元素的布局尺寸）
  */
 export function defaultGetPose(element: HTMLElement): Pose {
   const width = element.offsetWidth
@@ -86,9 +88,13 @@ export function defaultGetPose(element: HTMLElement): Pose {
 }
 
 /**
- * 默认设置位姿的函数
- * @param element
- * @param pose
+ * 将部分位姿应用到元素样式上以更新其位置、旋转、缩放和尺寸。
+ *
+ * 仅会应用在 `pose` 中显式提供的字段：`position` 会设置元素的 `left`/`top`，`rotation` 和 `scale`
+ * 会更新或追加到元素的 `transform`（保留其他 transform 部分），`width` 与 `height` 会设置元素的尺寸。
+ *
+ * @param element - 要应用位姿的 HTMLElement
+ * @param pose - 部分位姿，包含要更新的字段
  */
 export function defaultSetPose(
   element: HTMLElement,
