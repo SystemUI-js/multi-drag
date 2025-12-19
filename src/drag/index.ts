@@ -1,6 +1,11 @@
 export { Drag } from './drag'
 
-export { DragBase, defaultGetPose, defaultSetPose, DragOperationType } from './base'
+export {
+  DragBase,
+  defaultGetPose,
+  defaultSetPose,
+  DragOperationType
+} from './base'
 
 export type { Pose, Options, PoseRecord } from './base'
 

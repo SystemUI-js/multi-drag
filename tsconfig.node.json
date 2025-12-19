@@ -1,11 +1,4 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
-  },
+  "extends": "@system-ui-js/development-base/tsconfig.node.json",
   "include": ["vite.config.ts"]
 }
