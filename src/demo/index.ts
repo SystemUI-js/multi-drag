@@ -155,8 +155,8 @@ function printFinger(
   const point = finger.getLastOperation(type)?.point
   const fingerDiv = document.createElement('div')
   fingerDiv.style.position = 'fixed'
-  fingerDiv.style.left = `${point?.x || 0}px`
-  fingerDiv.style.top = `${point?.y || 0}px` || '0px'
+  fingerDiv.style.left = `${point?.x ?? 0}px`
+  fingerDiv.style.top = `${point?.y ?? 0}px`
   fingerDiv.style.width = '70px'
   fingerDiv.style.height = '70px'
   fingerDiv.style.zIndex = '1000'

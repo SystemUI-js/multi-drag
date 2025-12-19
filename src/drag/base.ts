@@ -271,7 +271,7 @@ export class DragBase {
           lastMovePose.pose.rotation - beforeLastMovePose.pose.rotation
         // 最后一次缩放的时间，单位：ms
         const timeSpend = lastMovePose.time - beforeLastMovePose.time
-        // 摩擦力（减速度），单位：rad/ms^2
+        // 摩擦力（减速度），单位：deg/ms^2
         const deceleration = DEFAULT_ROTATION_DECELERATION
         const speed = distance / timeSpend
         const timingFunction = getInertialTimingFunction(speed, deceleration)
@@ -440,7 +440,10 @@ export class DragBase {
     return this.currentOperationType
   }
   private readonly cleanFingers = (f: Finger) => {
-    this.fingers.splice(this.fingers.indexOf(f), 1)
+    const index = this.fingers.indexOf(f)
+    if (index !== -1) {
+      this.fingers.splice(index, 1)
+    }
     if (this.fingers.length === 0) {
       this.currentOperationType = DragOperationType.AllEnd
       this.trigger(DragOperationType.AllEnd)
