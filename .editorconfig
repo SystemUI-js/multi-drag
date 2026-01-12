@@ -1,0 +1,20 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+# JavaScript/TypeScript: 2 spaces
+[*.{js,jsx,ts,tsx}]
+indent_size = 2
+
+# CJS
+[*.{cjs}]
+indent_size = 4
+
+# Styles/HTML: 4 spaces
+[*.{css,scss,html}]
+indent_size = 4

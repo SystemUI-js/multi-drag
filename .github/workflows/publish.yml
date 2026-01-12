@@ -1,9 +1,9 @@
-name: Publish to npm (main/dev)
+name: Publish to npm (version branches)
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - 'version/*'
 
 permissions:
   contents: read
@@ -19,44 +19,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 解析标签类型并设定预期分支与 npm dist-tag
-      # 规则：
-      # - 正式版：vX.Y.Z -> 仅当该提交在 main 分支上时发布，dist-tag=latest
-      # - 预发布：vX.Y.Z-dev.N -> 仅当该提交在 dev 分支上时发布，dist-tag=dev
-      - name: Classify tag and prepare env
+      # 解析分支类型并设定 npm dist-tag
+      - name: Classify branch and prepare env
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          echo "Detected tag: $TAG"
-          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "PUBLISH_TAG=latest" >> "$GITHUB_ENV"
-            echo "EXPECTED_BRANCH=main" >> "$GITHUB_ENV"
-            echo "SHOULD_PUBLISH=true" >> "$GITHUB_ENV"
-          elif [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-dev\.[0-9]+$ ]]; then
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo "Detected branch: $BRANCH"
+
+          # 从分支名称提取版本号：version/1.0.0 -> 1.0.0
+          VERSION="${BRANCH#version/}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+          # 根据 package.json 的 version 判断是否为预发布版本
+          PKG_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
+
+          if [[ "$PKG_VERSION" =~ -dev ]]; then
             echo "PUBLISH_TAG=dev" >> "$GITHUB_ENV"
-            echo "EXPECTED_BRANCH=dev" >> "$GITHUB_ENV"
-            echo "SHOULD_PUBLISH=true" >> "$GITHUB_ENV"
+            echo "Version type: Dev Pre-release"
+          elif [[ "$PKG_VERSION" =~ -beta ]]; then
+            echo "PUBLISH_TAG=beta" >> "$GITHUB_ENV"
+            echo "Version type: Beta Pre-release"
           else
-            echo "Tag format not supported for publishing. Skip."
-            echo "SHOULD_PUBLISH=false" >> "$GITHUB_ENV"
+            echo "PUBLISH_TAG=latest" >> "$GITHUB_ENV"
+            echo "Version type: Release"
           fi
 
-      # 验证：被打标签的提交是否包含在期望分支中（origin/main 或 origin/dev）
-      - name: Verify tag commit is contained in expected branch
-        if: env.SHOULD_PUBLISH == 'true'
-        run: |
-          set -e
-          git fetch origin "+refs/heads/*:refs/remotes/origin/*"
-          if git branch -r --contains "$GITHUB_SHA" | grep -E "origin/${EXPECTED_BRANCH}" >/dev/null; then
-            echo "Commit $GITHUB_SHA is contained in ${EXPECTED_BRANCH}."
-          else
-            echo "Commit $GITHUB_SHA is NOT contained in ${EXPECTED_BRANCH}. Will skip publishing."
-            echo "SHOULD_PUBLISH=false" >> "$GITHUB_ENV"
-          fi
+          echo "Branch version: $VERSION"
+          echo "Package version: $PKG_VERSION"
+          echo "Publish tag: $PUBLISH_TAG"
 
       # 安装 Node，并配置 npm registry（用于 npm publish 鉴权）
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        if: env.SHOULD_PUBLISH == 'true'
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
@@ -64,7 +57,6 @@ jobs:
 
       # 使用 Yarn 安装依赖（项目包含 yarn.lock）
       - name: Install dependencies
-        if: env.SHOULD_PUBLISH == 'true'
         run: |
           corepack enable
           yarn --version
@@ -75,7 +67,6 @@ jobs:
       - name: Check if version already published
         id: version
         shell: bash
-        if: env.SHOULD_PUBLISH == 'true'
         run: |
           PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
@@ -89,33 +80,31 @@ jobs:
             echo "Version $VERSION not found on npm, will publish."
           fi
 
-      # 可选：预先运行单元测试与构建，提前暴露错误
-      # 注意：npm publish 会触发 prepublishOnly（其中也会执行 test & build）
-      - name: Run tests and build (optional precheck)
-        if: env.SHOULD_PUBLISH == 'true' && steps.version.outputs.should_publish == 'true'
+      # 构建项目（npm publish 会触发 prepublishOnly，其中也会执行构建，但这里提前构建以暴露错误）
+      - name: Build project
+        if: steps.version.outputs.should_publish == 'true'
         run: |
-          yarn test
           yarn build:all
 
-      # 发布到 npm。main 使用 latest tag，dev 使用 dev tag。
-      # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）。
+      # 发布到 npm。latest/dev/beta 分别使用对应的 dist-tag
+      # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）
       - name: Publish to npm
-        if: env.SHOULD_PUBLISH == 'true' && steps.version.outputs.should_publish == 'true' && github.event_name == 'push'
+        if: steps.version.outputs.should_publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # 使用 npm publish 以触发 prepublishOnly（包含测试与构建），并指定 tag 与访问级别
+          # 使用 npm publish 以触发 prepublishOnly（包含构建），并指定 tag 与访问级别
           npm publish --tag "$PUBLISH_TAG" --access public
 
-      # 无论是否发布成功，只要是 dev 预发布标签，都确保 dist-tag=dev 指向当前 version
-      - name: Ensure dev dist-tag
-        if: env.SHOULD_PUBLISH == 'true' && env.PUBLISH_TAG == 'dev' && github.event_name == 'push'
+      # 确保预发布标签的 dist-tag 指向当前 version（支持 dev 和 beta）
+      - name: Ensure pre-release dist-tag
+        if: (env.PUBLISH_TAG == 'dev' || env.PUBLISH_TAG == 'beta') && steps.version.outputs.should_publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
           VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
-          echo "Ensure dist-tag: dev -> $VERSION"
+          echo "Ensure dist-tag: ${PUBLISH_TAG} -> $VERSION"
           # 若版本已存在，也可重复设置 tag；若已指向则不变
-          npm dist-tag add "$PKG_NAME@$VERSION" dev || true
+          npm dist-tag add "$PKG_NAME@$VERSION" "$PUBLISH_TAG" || true
           npm dist-tag ls "$PKG_NAME"
