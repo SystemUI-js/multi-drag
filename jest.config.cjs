@@ -1,1 +1,1 @@
-module.exports = require('@system-ui-js/development-base/jest.config.cjs');
+module.exports = require('@system-ui-js/development-base/jest.config.cjs')

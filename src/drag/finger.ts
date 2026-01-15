@@ -30,13 +30,27 @@ export interface Options {
 export class Finger {
   // 手指路径，记录手指移动路径
   private path: FingerPathItem[] = []
+  // 事件监听器映射，存储每个操作类型对应的回调函数数组
+  // 用于管理手指操作（开始、移动、结束）的事件监听
   private eventListeners: Map<
     FingerOperationType,
     ((item: FingerPathItem) => void)[]
   > = new Map()
+
+  // 标记手指实例是否已被销毁
+  // 当手指抬起或取消时设置为true，防止继续处理事件
   private isDestroyed = false
+
+  // 指针ID，用于识别特定的指针事件
+  // 在多指操作中区分不同的手指，确保事件处理正确匹配
   private readonly pointerId: number
+
+  // 标记手指是否正在移动
+  // 用于判断手指状态，区分静止和移动状态
   private isMoving = false
+
+  // 当前操作类型，记录手指的当前阶段
+  // 用于跟踪手指的生命周期状态（开始、移动、结束）
   private currentOperationType: FingerOperationType = FingerOperationType.Start
   constructor(
     event: PointerEvent,

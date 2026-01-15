@@ -9,12 +9,15 @@
 ## [current]
 
 ### 新增功能 ✨
+
 - **惯性拖动重构**
   - 优化惯性实现架构，将惯性逻辑从 finger 迁移到 DragBase
   - 删除 make 函数体系，全面采用类实现方式
   - 优化结构，提升代码可维护性
+- 导出 `Finger`、`FingerOperationType` 与相关类型，便于外部使用
 
 ### 修复问题 🐛
+
 - 修复 options 的惯性设置不生效的问题
 - 修复 scale 和 rotate 的 End 时触发 type 错误
 - 修复 rotate 和 scale 的 handleEnd 没有响应事件的问题
@@ -22,14 +25,18 @@
 - 修复 CI 报错问题
 
 ### 代码重构 🔄
+
 - 简化代码结构，删除不必要的 make 函数
 - 改用类实现旋转缩放功能，提升代码质量
 - 优化惯性拖动功能的实现方式
 
 ### 开发工具 🔧
+
+- 统一 ESLint、Prettier、Jest 与 TypeScript 配置细节
+- 调整 GitHub Actions 发布与部署配置
 - **CI/CD 优化**
   - 优化 CI 脚本，拆分 PR 和发布流程
-  - **发布流程升级**：采用 version/* 分支触发方式
+  - **发布流程升级**：采用 version/\* 分支触发方式
     - 正式版：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z`
     - dev 预发布：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z-dev.N`
     - beta 预发布：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z-beta.N`
@@ -53,6 +60,8 @@
   - 优化 prettier.config.cjs 配置
 
 ### 文档更新 📚
+
+- 补充测试说明文档（tests/README.md）
 - 新增 CHANGELOG current 部分，用于记录待发布内容
 - 更新 ISSUE_TEMPLATE，使用 YAML 格式
 - 添加 CodeRabbit 徽章到 README
@@ -66,6 +75,7 @@
 ### 初始版本 ✨
 
 #### 新增功能
+
 - **核心拖拽功能**
   - 基础拖拽支持 (makeDraggable)
   - 魔法拖拽模式 (makeMagicDrag)
@@ -89,6 +99,7 @@
   - Vite 构建工具
 
 #### 技术特性
+
 - 支持触摸和鼠标事件
 - 响应式设计
 - 高性能矩阵计算
@@ -96,12 +107,14 @@
 - 完整TypeScript支持
 
 #### 开发环境
+
 - Node.js 18+
 - TypeScript 5.0+
 - Vite 5.0+
 - 完整测试覆盖
 
 #### 文档
+
 - 完整README文档
 - API使用示例
 - 开发指南
@@ -109,49 +122,53 @@
 ## [0.2.0] - 2025-10-19
 
 ### 新增功能
+
 - **多指混合拖拽重构**
   - 使用新的混合方式
 
 - **增加惯性拖动**
   - 增加惯性拖动
 
-
 ## [0.2.1] - 2025-10-20
 
 ### 新增功能
+
 - **DragBase增加passive模式的外部设置**
   - 新增setPassive方法，用于外部设置是否为passive模式
 
 - **DragBase增加enabled模式的外部设置**
   - 新增setEnabled和setDisabled方法，用于外部设置是否为enabled模式
 
-
 ## [0.2.2] - 2025-11-07
 
 ### 新增功能 ✨
+
 - **测试覆盖增强**
   - 增加缩放与旋转功能的单元测试用例
   - 优化触控点匹配逻辑
   - 清理过时的单元测试
 
 ### 修复问题 🐛
+
 - 修复单测报错
 
 ## [0.2.4] - 2025-11-15
 
 ### 新增功能 ✨
+
 - **替换底层事件监听**
   - MouseEvent和 TouchEvent都改为 PointerEvent
 
 ### 修复问题 🐛
-- 修复多指触控时抬起手指导致所有事件全都触发 END 的问题
 
+- 修复多指触控时抬起手指导致所有事件全都触发 END 的问题
 
 ## [0.2.5] - 2025-11-17
 
 ### 新增功能 ✨
 
 ### 修复问题 🐛
+
 - 修复options.inertial设置对惯性不管用的问题
 
 ## [0.2.6] - 2025-11-17
@@ -159,23 +176,26 @@
 ### 新增功能 ✨
 
 ### 修复问题 🐛
+
 - 修复 options.setPoseOnEnd 在 rotate 和 scale 不生效的问题（#31）
 
 ### 开发工具 🔧
+
 - 添加编辑器配置和项目规则（.editorconfig）
 
 ## 版本说明
 
 ### 版本号规则
+
 - **主版本号 (MAJOR)**：不兼容的API修改
 - **次版本号 (MINOR)**：向下兼容的功能性新增
 - **修订号 (PATCH)**：向下兼容的问题修正
 
 ### 标签说明
+
 - ✨ 新增功能 (Added)
 - 🔄 功能变更 (Changed)
 - 🐛 问题修复 (Fixed)
 - ⚡ 性能优化 (Performance)
 - 🔧 开发工具 (Dev Tools)
 - 📚 文档更新 (Documentation)
-
