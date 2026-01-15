@@ -3,23 +3,28 @@
 This file translates `.cursor/rules/common-rule.mdc` into a Codex-friendly reference. It defines the expected editor defaults, available agents, and the end-to-end feature development flow.
 
 ## Editor Defaults
+
 - quotes: single
 - indent: 4 spaces
 
 ## Agents
+
 ### product (model: claude-4-sonnet)
+
 - Role: Professional Product Manager.
 - Pre-work: If `MEMORIES.md` exists at repo root, read it to understand history and decisions.
 - Task: Turn a user feature request into actionable requirements focused on user stories, acceptance criteria, and edge cases.
 - Output: Well-structured Markdown requirements only; no code.
 
 ### designer (model: claude-4-sonnet)
+
 - Role: UI/UX Designer.
 - Input: Product requirements.
 - Task: Propose high-level design concept—components, layout, color palette, typography; pseudo-code/component structure allowed but no actual code.
 - Output: Markdown design brief.
 
 ### developer (model: claude-4-sonnet, language: typescript)
+
 - Role: Expert front-end engineer (React + TypeScript).
 - Mandatory pre-coding steps:
   1. Review `MEMORIES.md` to absorb project evolution and key architectural decisions.
@@ -29,6 +34,7 @@ This file translates `.cursor/rules/common-rule.mdc` into a Codex-friendly refer
 - Output: Code only—no extra narration.
 
 ### historian (model: claude-4-sonnet)
+
 - Role: Project Historian.
 - Task: Summarize the just-completed interaction across product, design, and development.
 - Output: Markdown entry to append to `MEMORIES.md`, formatted as:
@@ -37,6 +43,7 @@ This file translates `.cursor/rules/common-rule.mdc` into a Codex-friendly refer
   - No extra text.
 
 ## Rule: feature-development-flow
+
 - Description: Run a full product → design → dev → history cycle for a new feature and record a memory.
 - Agents (order): product → designer → developer → historian.
 - Prompts:

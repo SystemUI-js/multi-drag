@@ -1,7 +1,7 @@
-name: "🌟 新功能请求 (Feature Request)"
+name: '🌟 新功能请求 (Feature Request)'
 description: 为这个项目提出一个新功能的建议（Commit a feature request to help us improve）
-title: "[Feature]: "
-labels: ["enhancement"]
+title: '[Feature]: '
+labels: ['enhancement']
 body:
   - type: markdown
     attributes:
@@ -14,7 +14,7 @@ body:
     attributes:
       label: 你的功能请求是否与某个问题有关？ (Is your feature request related to a problem?)
       description: 请描述一下你遇到的问题或痛点。 (Please describe the problem or pain point.)
-      placeholder: "我总是...的时候感到很沮丧，因为..."
+      placeholder: '我总是...的时候感到很沮丧，因为...'
     validations:
       required: true
 
@@ -23,7 +23,7 @@ body:
     attributes:
       label: 你期望的解决方案是什么？ (Describe the solution you'd like)
       description: 请清晰简洁地描述你希望实现的功能。 (A clear and concise description of what you want to happen.)
-      placeholder: "我希望...可以... 这样我就能...（I hope... can... so that I can...）"
+      placeholder: '我希望...可以... 这样我就能...（I hope... can... so that I can...）'
     validations:
       required: true
 

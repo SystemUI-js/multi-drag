@@ -1,150 +1,150 @@
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 
-    color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
 
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
 #app {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
-    position: relative;
-    min-height: 100vh;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  min-height: 100vh;
 }
 
 h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-    color: #646cff;
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: #646cff;
 }
 
 .header-content {
-    margin-bottom: 3rem;
-    z-index: 10;
-    position: relative;
+  margin-bottom: 3rem;
+  z-index: 10;
+  position: relative;
 }
 
 .drag-zone {
-    position: relative;
-    margin: 0 auto;
-    width: 300px;
-    height: 300px;
-    border: 3px dashed #646cff;
-    border-radius: 20px;
-    padding: 2rem;
-    background-color: rgba(36, 36, 36, 0.9);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    z-index: 5;
+  position: relative;
+  margin: 0 auto;
+  width: 300px;
+  height: 300px;
+  border: 3px dashed #646cff;
+  border-radius: 20px;
+  padding: 2rem;
+  background-color: rgba(36, 36, 36, 0.9);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 5;
 }
 
 .drag-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .draggable-item {
-    padding: 1rem 2rem;
-    background-color: #1a1a1a;
-    border: 2px solid #646cff;
-    border-radius: 8px;
-    cursor: grab;
-    -webkit-user-select: none;
-    user-select: none;
-    min-width: 200px;
-    position: absolute;
+  padding: 1rem 2rem;
+  background-color: #1a1a1a;
+  border: 2px solid #646cff;
+  border-radius: 8px;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  min-width: 200px;
+  position: absolute;
 }
 
 .draggable-item.selected {
-    background-color: #999999 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
+  background-color: #999999 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
 }
 
 .draggable-item:hover {
-    background-color: #2a2a2a;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
+  background-color: #2a2a2a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(100, 108, 255, 0.3);
 }
 
 .draggable-item:active {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 @media (prefers-color-scheme: light) {
-    :root {
-        color: #213547;
-        background-color: #ffffff;
-    }
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
 
-    .drag-zone {
-        background-color: rgba(255, 255, 255, 0.9);
-        border-color: #646cff;
-    }
+  .drag-zone {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: #646cff;
+  }
 
-    .draggable-item {
-        background-color: #f9f9f9;
-        border-color: #646cff;
-    }
+  .draggable-item {
+    background-color: #f9f9f9;
+    border-color: #646cff;
+  }
 
-    .draggable-item:hover {
-        background-color: #e9e9e9;
-    }
+  .draggable-item:hover {
+    background-color: #e9e9e9;
+  }
 }
 
 .joysticks {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
 .joystick {
-    position: absolute;
-    width: 150px;
-    height: 150px;
-    background-color: #646cff33;
-    border-radius: 50%;
-    cursor: pointer;
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background-color: #646cff33;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .joystick1 {
-    top: 50%;
-    left: 0;
-    transform: translate(0, -50%);
+  top: 50%;
+  left: 0;
+  transform: translate(0, -50%);
 }
 
 .joystick2 {
-    right: 0;
-    top: 50%;
-    transform: translate(0, -50%);
+  right: 0;
+  top: 50%;
+  transform: translate(0, -50%);
 }
 
 .joystick-handle {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    background-color: #646cff;
-    border-radius: 50%;
-    cursor: pointer;
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: #646cff;
+  border-radius: 50%;
+  cursor: pointer;
 }

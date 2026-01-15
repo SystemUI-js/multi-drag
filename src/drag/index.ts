@@ -14,3 +14,7 @@ export { Rotate } from './rotate'
 export { Scale } from './scale'
 
 export { Mixin, MixinType } from './mixin'
+
+export { Finger, FingerOperationType } from './finger'
+
+export type { FingerPathItem, Options as FingerOptions } from './finger'
