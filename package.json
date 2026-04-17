@@ -28,8 +28,8 @@
         "test:e2e:headed": "playwright test --headed",
         "test:all": "yarn test && yarn test:e2e",
         "prepublishOnly": "yarn test:all && yarn build",
-        "release:core": "yarn workspace @system-ui-js/multi-drag-core npm publish --access public",
-        "release:web": "yarn workspace @system-ui-js/multi-drag npm publish --access public"
+        "release:core": "yarn workspace @system-ui-js/multi-drag-core build && yarn workspace @system-ui-js/multi-drag-core npm publish --access public",
+        "release:web": "yarn workspace @system-ui-js/multi-drag-core build && yarn workspace @system-ui-js/multi-drag build && yarn workspace @system-ui-js/multi-drag npm publish --access public"
     },
     "devDependencies": {
         "@eslint/js": "9.39.2",

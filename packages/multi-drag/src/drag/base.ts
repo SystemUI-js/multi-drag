@@ -43,6 +43,8 @@ export class DragBase {
   protected currentOperationType: DragOperationType = DragOperationType.End
   private isEnabled = true
   private isPassive = false
+  private isDestroyed = false
+  private inertialFrameId: number | null = null
 
   constructor(
     protected readonly element: HTMLElement,
@@ -60,10 +62,15 @@ export class DragBase {
   }
 
   destroy() {
+    this.isDestroyed = true
     this.element.removeEventListener('pointerdown', this.handlePointerDown)
     document.removeEventListener('pointermove', this.handlePointerMove)
     document.removeEventListener('pointerup', this.handlePointerEnd)
     document.removeEventListener('pointercancel', this.handlePointerCancel)
+    if (this.inertialFrameId !== null) {
+      cancelAnimationFrame(this.inertialFrameId)
+      this.inertialFrameId = null
+    }
     this.fingers.clear()
     this.controller.reset()
   }
@@ -143,7 +150,7 @@ export class DragBase {
   }
 
   trigger(type: DragOperationType, fingers?: Finger[]) {
-    if (!this.isEnabled) {
+    if (!this.isEnabled || this.isDestroyed) {
       return
     }
     for (const callback of this.events.get(type) ?? []) {
@@ -276,23 +283,23 @@ export class DragBase {
     const startTime = Date.now()
 
     const frame = () => {
-      if (
-        this.currentOperationType === DragOperationType.Start ||
-        this.currentOperationType === DragOperationType.Move
-      ) {
+      if (this.isDestroyed) {
         return
       }
+
+      this.inertialFrameId = null
 
       const projection = projector(Date.now() - startTime)
       if (!projection) {
         this.currentOperationType = DragOperationType.InertialEnd
+        this.trigger(DragOperationType.InertialEnd)
         return
       }
 
       this.currentOperationType = DragOperationType.Inertial
       this.setPose(this.element, projection, DragOperationType.Inertial)
       this.trigger(DragOperationType.Inertial)
-      requestAnimationFrame(frame)
+      this.inertialFrameId = requestAnimationFrame(frame)
     }
 
     frame()
