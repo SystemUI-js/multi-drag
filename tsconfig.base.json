@@ -1,0 +1,14 @@
+{
+    "extends": "@system-ui-js/development-base/tsconfig.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "noEmit": false,
+        "moduleResolution": "node",
+        "allowImportingTsExtensions": false,
+        "forceConsistentCasingInFileNames": true
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

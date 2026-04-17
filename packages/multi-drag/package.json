@@ -1,0 +1,28 @@
+{
+    "name": "@system-ui-js/multi-drag",
+    "version": "0.2.6",
+    "description": "DOM/Web adapter for multi-drag gestures.",
+    "license": "MIT",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "package.json",
+        "LICENSE",
+        "assets"
+    ],
+    "scripts": {
+        "build": "tsc --project tsconfig.build.json",
+        "test": "jest --config jest.config.cjs",
+        "lint": "eslint src --ext .ts"
+    },
+    "dependencies": {
+        "@system-ui-js/multi-drag-core": "*",
+        "loglevel": "^1.9.2"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

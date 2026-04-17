@@ -6,6 +6,25 @@
 
 ---
 
+## [UnReleased]
+
+### 新增功能 ✨
+
+- 拆分 workspace，新增 `@system-ui-js/multi-drag-core` 包
+- 新增平台无关的归一化输入控制器、几何计算与惯性推导能力
+- 新增 Demo，对比 core 驱动示例与 Web 封装示例
+
+### 代码重构 🔄
+
+- 将原单包结构重构为 `packages/multi-drag-core`、`packages/multi-drag`、`apps/demo`
+- 将 DOM/Web 事件归一化与宿主 pose 读写收敛到 `multi-drag` 兼容层
+- 让 `Drag` / `Rotate` / `Scale` / `Mixin` 基于 core 控制器工作
+
+### 开发工具 🔧
+
+- 调整根目录构建、测试、E2E 脚本为 workspace 流程
+- 新增 core / web 分层单测与 demo 构建校验
+
 ## [current]
 
 ### 新增功能 ✨

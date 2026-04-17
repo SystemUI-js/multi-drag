@@ -1,4 +1,14 @@
 {
-  "extends": "@system-ui-js/development-base/tsconfig.json",
-  "exclude": ["vite.config.ts"]
+    "files": [],
+    "references": [
+        {
+            "path": "./packages/multi-drag-core"
+        },
+        {
+            "path": "./packages/multi-drag"
+        },
+        {
+            "path": "./apps/demo"
+        }
+    ]
 }
