@@ -1,0 +1,23 @@
+{
+    "name": "@system-ui-js/multi-drag-core",
+    "version": "0.1.0",
+    "description": "Platform-agnostic gesture core for multi-drag.",
+    "license": "MIT",
+    "type": "module",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "package.json"
+    ],
+    "scripts": {
+        "build": "tsc --project tsconfig.build.json",
+        "prepublishOnly": "yarn build",
+        "test": "jest --config jest.config.cjs",
+        "lint": "eslint src --ext .ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
