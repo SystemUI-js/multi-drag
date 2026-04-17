@@ -1,6 +1,6 @@
 {
     "name": "@system-ui-js/multi-drag-core",
-    "version": "0.1.0",
+    "version": "0.3.0",
     "description": "Platform-agnostic gesture core for multi-drag.",
     "license": "MIT",
     "type": "module",

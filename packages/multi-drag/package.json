@@ -1,6 +1,6 @@
 {
     "name": "@system-ui-js/multi-drag",
-    "version": "0.2.6",
+    "version": "0.3.0",
     "description": "DOM/Web adapter for multi-drag gestures.",
     "license": "MIT",
     "type": "module",
