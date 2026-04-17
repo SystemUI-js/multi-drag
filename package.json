@@ -14,6 +14,7 @@
     "scripts": {
         "dev": "yarn workspace @system-ui-js/multi-drag-demo dev",
         "build": "yarn build:packages && yarn build:demo",
+        "build:all": "yarn build",
         "build:packages": "yarn workspace @system-ui-js/multi-drag-core build && yarn workspace @system-ui-js/multi-drag build",
         "build:demo": "yarn workspace @system-ui-js/multi-drag-demo build",
         "lint": "eslint .",

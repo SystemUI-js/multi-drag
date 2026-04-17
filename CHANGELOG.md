@@ -24,6 +24,7 @@
 
 - 调整根目录构建、测试、E2E 脚本为 workspace 流程
 - 新增 core / web 分层单测与 demo 构建校验
+- 补充 `build:all` workspace 脚本，修复 GitHub Actions 中的构建命令缺失问题
 
 ## [current]
 

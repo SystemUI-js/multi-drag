@@ -14,7 +14,9 @@ import {
   type Pose
 } from './types'
 
-interface InternalPointerState extends GesturePointerSnapshot {}
+type InternalPointerState = GesturePointerSnapshot
+
+type GestureControllerRuntimeOptions = GestureControllerOptions
 
 interface MutablePose {
   position: { x: number; y: number }
@@ -36,7 +38,7 @@ export class GestureController {
   private initialPose?: Pose
   private anchorCenter?: { x: number; y: number }
 
-  constructor(private readonly options: GestureControllerOptions) {}
+  constructor(private readonly options: GestureControllerRuntimeOptions) {}
 
   reset() {
     this.pointers.clear()
@@ -51,21 +53,7 @@ export class GestureController {
     const features = context.features ?? this.options.features
 
     if (input.phase === PointerPhase.Start) {
-      for (const pointer of this.pointers.values()) {
-        pointer.startPoint = { ...pointer.currentPoint }
-        pointer.startTimestamp = pointer.currentTimestamp
-      }
-
-      this.initialPose = clonePose(context.pose)
-      this.anchorCenter = context.anchorCenter
-      this.pointers.set(input.pointerId, {
-        pointerId: input.pointerId,
-        startPoint: { ...input.point },
-        currentPoint: { ...input.point },
-        startTimestamp: input.timestamp,
-        currentTimestamp: input.timestamp
-      })
-
+      this.beginPointer(input, context.pose, context.anchorCenter)
       return this.buildSnapshot(GesturePhase.Start, context.pose)
     }
 
@@ -74,22 +62,9 @@ export class GestureController {
       return this.buildSnapshot(GesturePhase.Idle, context.pose)
     }
 
-    pointer.currentPoint = { ...input.point }
-    pointer.currentTimestamp = input.timestamp
+    this.updatePointer(pointer, input, context)
 
-    if (!this.initialPose) {
-      this.initialPose = clonePose(context.pose)
-    }
-    if (context.anchorCenter) {
-      this.anchorCenter = context.anchorCenter
-    }
-
-    const phase =
-      input.phase === PointerPhase.Move
-        ? GesturePhase.Move
-        : input.phase === PointerPhase.Cancel
-          ? GesturePhase.Cancel
-          : GesturePhase.End
+    const phase = this.resolvePhase(input.phase)
 
     const pose = this.computePose(context.pose, features)
     const snapshot = this.buildSnapshot(phase, pose)
@@ -98,26 +73,84 @@ export class GestureController {
       input.phase === PointerPhase.End ||
       input.phase === PointerPhase.Cancel
     ) {
-      const endedPointer = this.pointers.get(input.pointerId)
-      this.pointers.delete(input.pointerId)
-
-      if (this.pointers.size > 0 && endedPointer) {
-        this.initialPose = clonePose(pose)
-        this.anchorCenter = context.anchorCenter ?? this.anchorCenter
-
-        for (const pointer of this.pointers.values()) {
-          pointer.startPoint = { ...pointer.currentPoint }
-          pointer.startTimestamp = pointer.currentTimestamp
-        }
-      }
-
-      if (this.pointers.size === 0) {
-        this.initialPose = undefined
-        this.anchorCenter = undefined
-      }
+      this.finishPointer(input.pointerId, pose, context.anchorCenter)
     }
 
     return snapshot
+  }
+
+  private beginPointer(
+    input: NormalizedPointerInput,
+    pose: Pose,
+    anchorCenter: { x: number; y: number } | undefined
+  ) {
+    for (const pointer of this.pointers.values()) {
+      pointer.startPoint = { ...pointer.currentPoint }
+      pointer.startTimestamp = pointer.currentTimestamp
+    }
+
+    this.initialPose = clonePose(pose)
+    this.anchorCenter = anchorCenter
+    this.pointers.set(input.pointerId, {
+      pointerId: input.pointerId,
+      startPoint: { ...input.point },
+      currentPoint: { ...input.point },
+      startTimestamp: input.timestamp,
+      currentTimestamp: input.timestamp
+    })
+  }
+
+  private updatePointer(
+    pointer: InternalPointerState,
+    input: NormalizedPointerInput,
+    context: GestureComputeContext
+  ) {
+    pointer.currentPoint = { ...input.point }
+    pointer.currentTimestamp = input.timestamp
+
+    if (!this.initialPose) {
+      this.initialPose = clonePose(context.pose)
+    }
+
+    if (context.anchorCenter) {
+      this.anchorCenter = context.anchorCenter
+    }
+  }
+
+  private resolvePhase(phase: NormalizedPointerInput['phase']) {
+    if (phase === PointerPhase.Move) {
+      return GesturePhase.Move
+    }
+
+    if (phase === PointerPhase.Cancel) {
+      return GesturePhase.Cancel
+    }
+
+    return GesturePhase.End
+  }
+
+  private finishPointer(
+    pointerId: number,
+    pose: Pose,
+    anchorCenter: { x: number; y: number } | undefined
+  ) {
+    const endedPointer = this.pointers.get(pointerId)
+    this.pointers.delete(pointerId)
+
+    if (this.pointers.size > 0 && endedPointer) {
+      this.initialPose = clonePose(pose)
+      this.anchorCenter = anchorCenter ?? this.anchorCenter
+
+      for (const pointer of this.pointers.values()) {
+        pointer.startPoint = { ...pointer.currentPoint }
+        pointer.startTimestamp = pointer.currentTimestamp
+      }
+    }
+
+    if (this.pointers.size === 0) {
+      this.initialPose = undefined
+      this.anchorCenter = undefined
+    }
   }
 
   private computePose(

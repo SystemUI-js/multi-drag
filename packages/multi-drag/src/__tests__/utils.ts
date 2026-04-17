@@ -53,6 +53,10 @@ function nextPointerId() {
   return touchCounter
 }
 
+function nextMousePointerId() {
+  return nextPointerId()
+}
+
 export function mockTouchMove(
   element: HTMLElement,
   initPoint: Point,
@@ -102,7 +106,7 @@ export function mockMouseMove(
   initPoint: Point,
   movePoint: Point
 ) {
-  const pointerId = Math.floor(Math.random() * 1000000)
+  const pointerId = nextMousePointerId()
   element.dispatchEvent(
     createPointerEvent('pointerdown', {
       clientX: initPoint.x,

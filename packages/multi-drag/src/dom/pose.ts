@@ -41,6 +41,61 @@ function toBoxModelSize(
   )}px`
 }
 
+function replaceOrAppendTransform(
+  transform: string,
+  pattern: RegExp,
+  value: string
+): string {
+  const matched = pattern.exec(transform)?.[1]
+
+  if (matched === undefined) {
+    return `${transform}${value}`
+  }
+
+  return transform.replace(pattern, value) || ''
+}
+
+function applyPosition(element: HTMLElement, pose: Partial<Pose>): void {
+  if (Object.hasOwn(pose, 'position') && pose.position !== undefined) {
+    element.style.left = `${pose.position.x}px`
+    element.style.top = `${pose.position.y}px`
+  }
+}
+
+function applyRotation(element: HTMLElement, pose: Partial<Pose>): void {
+  if (Object.hasOwn(pose, 'rotation') && pose.rotation !== undefined) {
+    element.style.transform = replaceOrAppendTransform(
+      element.style.transform,
+      /rotate\((-?\d+(?:\.\d+)?)deg\)/,
+      `rotate(${pose.rotation || 0}deg)`
+    )
+  }
+}
+
+function applyScale(element: HTMLElement, pose: Partial<Pose>): void {
+  if (Object.hasOwn(pose, 'scale') && pose.scale !== undefined) {
+    element.style.transform = replaceOrAppendTransform(
+      element.style.transform,
+      /scale\((-?\d+(?:\.\d+)?)\)/,
+      `scale(${pose.scale || 1})`
+    )
+  }
+}
+
+function applySize(element: HTMLElement, pose: Partial<Pose>): void {
+  if (
+    (Object.hasOwn(pose, 'width') && pose.width !== undefined) ||
+    (Object.hasOwn(pose, 'height') && pose.height !== undefined)
+  ) {
+    if (Object.hasOwn(pose, 'width') && pose.width !== undefined) {
+      element.style.width = toBoxModelSize(element, 'width', pose.width)
+    }
+    if (Object.hasOwn(pose, 'height') && pose.height !== undefined) {
+      element.style.height = toBoxModelSize(element, 'height', pose.height)
+    }
+  }
+}
+
 export function defaultGetPose(element: HTMLElement): Pose {
   const width = element.offsetWidth
   const height = element.offsetHeight
@@ -66,49 +121,10 @@ export function defaultSetPose(
   element: HTMLElement,
   pose: Partial<Pose>
 ): void {
-  if (Object.hasOwn(pose, 'position') && pose.position !== undefined) {
-    element.style.left = `${pose.position.x}px`
-    element.style.top = `${pose.position.y}px`
-  }
-  if (Object.hasOwn(pose, 'rotation') && pose.rotation !== undefined) {
-    const originRotation = /rotate\((-?\d+(?:\.\d+)?)deg\)/.exec(
-      element.style.transform
-    )?.[1]
-    if (originRotation === undefined) {
-      element.style.transform += `rotate(${pose.rotation || 0}deg)`
-    } else {
-      element.style.transform =
-        element.style.transform.replace(
-          /rotate\((-?\d+(?:\.\d+)?)deg\)/,
-          `rotate(${pose.rotation || 0}deg)`
-        ) || ''
-    }
-  }
-  if (Object.hasOwn(pose, 'scale') && pose.scale !== undefined) {
-    const originScale = /scale\((-?\d+(?:\.\d+)?)\)/.exec(
-      element.style.transform
-    )?.[1]
-    if (originScale === undefined) {
-      element.style.transform += `scale(${pose.scale || 1})`
-    } else {
-      element.style.transform =
-        element.style.transform.replace(
-          /scale\((-?\d+(?:\.\d+)?)\)/,
-          `scale(${pose.scale || 1})`
-        ) || ''
-    }
-  }
-  if (
-    (Object.hasOwn(pose, 'width') && pose.width !== undefined) ||
-    (Object.hasOwn(pose, 'height') && pose.height !== undefined)
-  ) {
-    if (Object.hasOwn(pose, 'width') && pose.width !== undefined) {
-      element.style.width = toBoxModelSize(element, 'width', pose.width)
-    }
-    if (Object.hasOwn(pose, 'height') && pose.height !== undefined) {
-      element.style.height = toBoxModelSize(element, 'height', pose.height)
-    }
-  }
+  applyPosition(element, pose)
+  applyRotation(element, pose)
+  applyScale(element, pose)
+  applySize(element, pose)
 }
 
 export function getAnchorCenter(element: HTMLElement) {
