@@ -251,13 +251,14 @@ export class DragBase {
       return
     }
 
+    const activePointerCount = this.fingers.size
     finger.record(fingerOperationType, event)
     const snapshot = this.controller.process(
       normalizePointerEvent(event, phase),
       {
         pose: this.getPose(this.element),
         anchorCenter: getAnchorCenter(this.element),
-        features: this.resolveGestureFeatures(this.fingers.size)
+        features: this.resolveGestureFeatures(activePointerCount)
       }
     )
 

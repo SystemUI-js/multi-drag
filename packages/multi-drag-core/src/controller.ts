@@ -98,7 +98,19 @@ export class GestureController {
       input.phase === PointerPhase.End ||
       input.phase === PointerPhase.Cancel
     ) {
+      const endedPointer = this.pointers.get(input.pointerId)
       this.pointers.delete(input.pointerId)
+
+      if (this.pointers.size > 0 && endedPointer) {
+        this.initialPose = clonePose(pose)
+        this.anchorCenter = context.anchorCenter ?? this.anchorCenter
+
+        for (const pointer of this.pointers.values()) {
+          pointer.startPoint = { ...pointer.currentPoint }
+          pointer.startTimestamp = pointer.currentTimestamp
+        }
+      }
+
       if (this.pointers.size === 0) {
         this.initialPose = undefined
         this.anchorCenter = undefined

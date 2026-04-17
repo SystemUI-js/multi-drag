@@ -23,6 +23,18 @@ const RuntimePointerEvent =
   globalThis.PointerEvent ??
   (TestPointerEvent as unknown as typeof PointerEvent)
 
+export function createPointerEvent(
+  type: string,
+  init: PointerEventInitWithFields = {}
+) {
+  return new RuntimePointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    button: 0,
+    ...init
+  })
+}
+
 export function createAnElement() {
   const element = document.createElement('div')
   element.style.position = 'fixed'
@@ -50,10 +62,7 @@ export function mockTouchMove(
   const pointerIds = Array.from({ length: fingerCount }, () => nextPointerId())
   for (const [index, pointerId] of pointerIds.entries()) {
     element.dispatchEvent(
-      new RuntimePointerEvent('pointerdown', {
-        bubbles: true,
-        cancelable: true,
-        button: 0,
+      createPointerEvent('pointerdown', {
         clientX: initPoint.x + index * 10,
         clientY: initPoint.y + index * 10,
         pointerId,
@@ -65,10 +74,7 @@ export function mockTouchMove(
 
   for (const [index, pointerId] of pointerIds.entries()) {
     document.dispatchEvent(
-      new RuntimePointerEvent('pointermove', {
-        bubbles: true,
-        cancelable: true,
-        button: 0,
+      createPointerEvent('pointermove', {
         clientX: movePoint.x + index * 10,
         clientY: movePoint.y + index * 10,
         pointerId,
@@ -80,10 +86,7 @@ export function mockTouchMove(
 
   for (const [index, pointerId] of pointerIds.entries()) {
     document.dispatchEvent(
-      new RuntimePointerEvent('pointerup', {
-        bubbles: true,
-        cancelable: true,
-        button: 0,
+      createPointerEvent('pointerup', {
         clientX: movePoint.x + index * 10,
         clientY: movePoint.y + index * 10,
         pointerId,
@@ -101,10 +104,7 @@ export function mockMouseMove(
 ) {
   const pointerId = Math.floor(Math.random() * 1000000)
   element.dispatchEvent(
-    new RuntimePointerEvent('pointerdown', {
-      bubbles: true,
-      cancelable: true,
-      button: 0,
+    createPointerEvent('pointerdown', {
       clientX: initPoint.x,
       clientY: initPoint.y,
       pointerId,
@@ -113,10 +113,7 @@ export function mockMouseMove(
     })
   )
   document.dispatchEvent(
-    new RuntimePointerEvent('pointermove', {
-      bubbles: true,
-      cancelable: true,
-      button: 0,
+    createPointerEvent('pointermove', {
       clientX: movePoint.x,
       clientY: movePoint.y,
       pointerId,
@@ -125,10 +122,7 @@ export function mockMouseMove(
     })
   )
   document.dispatchEvent(
-    new RuntimePointerEvent('pointerup', {
-      bubbles: true,
-      cancelable: true,
-      button: 0,
+    createPointerEvent('pointerup', {
       clientX: movePoint.x,
       clientY: movePoint.y,
       pointerId,
