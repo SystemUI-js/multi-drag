@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   publish:
-    name: Build and Publish
+    name: Build and Publish Packages
     runs-on: ubuntu-latest
     steps:
       # 拉取代码
@@ -18,34 +18,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # 解析分支类型并设定 npm dist-tag
-      - name: Classify branch and prepare env
-        run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          echo "Detected branch: $BRANCH"
-
-          # 从分支名称提取版本号：version/1.0.0 -> 1.0.0
-          VERSION="${BRANCH#version/}"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-
-          # 根据 package.json 的 version 判断是否为预发布版本
-          PKG_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
-
-          if [[ "$PKG_VERSION" =~ -dev ]]; then
-            echo "PUBLISH_TAG=dev" >> "$GITHUB_ENV"
-            echo "Version type: Dev Pre-release"
-          elif [[ "$PKG_VERSION" =~ -beta ]]; then
-            echo "PUBLISH_TAG=beta" >> "$GITHUB_ENV"
-            echo "Version type: Beta Pre-release"
-          else
-            echo "PUBLISH_TAG=latest" >> "$GITHUB_ENV"
-            echo "Version type: Release"
-          fi
-
-          echo "Branch version: $VERSION"
-          echo "Package version: $PKG_VERSION"
-          echo "Publish tag: $PUBLISH_TAG"
 
       # 安装 Node，并配置 npm registry（用于 npm publish 鉴权）
       - name: Setup Node.js
@@ -62,49 +34,134 @@ jobs:
           yarn --version
           yarn install --frozen-lockfile
 
-      # 读取 package.json 的 name 与 version，并检查该版本是否已发布
-      # 已发布则跳过后续发布步骤，避免重复发布导致失败
-      - name: Check if version already published
-        id: version
+      # 解析分支类型、收集待发布包信息，并校验版本一致性
+      - name: Classify branch and collect package metadata
+        id: packages
         shell: bash
         run: |
-          PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
-          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
-          echo "Package: $PKG_NAME"
-          echo "Version: $VERSION"
-          if npm view "$PKG_NAME@$VERSION" version > /dev/null 2>&1; then
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            echo "Version $VERSION already exists on npm, skip publishing."
-          else
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "Version $VERSION not found on npm, will publish."
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          BRANCH_VERSION="${BRANCH#version/}"
+
+          CORE_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag-core/package.json','utf8')).name)")
+          CORE_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag-core/package.json','utf8')).version)")
+          WEB_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag/package.json','utf8')).name)")
+          WEB_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag/package.json','utf8')).version)")
+
+          echo "Detected branch: $BRANCH"
+          echo "Branch version: $BRANCH_VERSION"
+          echo "Core package: $CORE_NAME@$CORE_VERSION"
+          echo "Web package: $WEB_NAME@$WEB_VERSION"
+
+          if [[ "$CORE_VERSION" != "$WEB_VERSION" ]]; then
+            echo "Package versions must stay in sync: $CORE_VERSION != $WEB_VERSION"
+            exit 1
           fi
 
-      # 构建项目（npm publish 会触发 prepublishOnly，其中也会执行构建，但这里提前构建以暴露错误）
-      - name: Build project
-        if: steps.version.outputs.should_publish == 'true'
+          if [[ "$BRANCH_VERSION" != "$CORE_VERSION" ]]; then
+            echo "Branch version $BRANCH_VERSION does not match package version $CORE_VERSION"
+            exit 1
+          fi
+
+          if [[ "$CORE_VERSION" =~ -dev ]]; then
+            PUBLISH_TAG='dev'
+            echo 'Version type: Dev Pre-release'
+          elif [[ "$CORE_VERSION" =~ -beta ]]; then
+            PUBLISH_TAG='beta'
+            echo 'Version type: Beta Pre-release'
+          else
+            PUBLISH_TAG='latest'
+            echo 'Version type: Release'
+          fi
+
+          echo "PUBLISH_TAG=$PUBLISH_TAG" >> "$GITHUB_ENV"
+          echo "publish_tag=$PUBLISH_TAG" >> "$GITHUB_OUTPUT"
+          echo "core_name=$CORE_NAME" >> "$GITHUB_OUTPUT"
+          echo "core_version=$CORE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "web_name=$WEB_NAME" >> "$GITHUB_OUTPUT"
+          echo "web_version=$WEB_VERSION" >> "$GITHUB_OUTPUT"
+
+      # 检查两个包的版本是否已发布；已发布则单独跳过，避免重复发布导致失败
+      - name: Check package publish status
+        id: publish_status
+        shell: bash
         run: |
+          CORE_NAME='${{ steps.packages.outputs.core_name }}'
+          CORE_VERSION='${{ steps.packages.outputs.core_version }}'
+          WEB_NAME='${{ steps.packages.outputs.web_name }}'
+          WEB_VERSION='${{ steps.packages.outputs.web_version }}'
+
+          if npm view "$CORE_NAME@$CORE_VERSION" version > /dev/null 2>&1; then
+            CORE_SHOULD_PUBLISH='false'
+            echo "Version already exists, skip: $CORE_NAME@$CORE_VERSION"
+          else
+            CORE_SHOULD_PUBLISH='true'
+            echo "Version not found, will publish: $CORE_NAME@$CORE_VERSION"
+          fi
+
+          if npm view "$WEB_NAME@$WEB_VERSION" version > /dev/null 2>&1; then
+            WEB_SHOULD_PUBLISH='false'
+            echo "Version already exists, skip: $WEB_NAME@$WEB_VERSION"
+          else
+            WEB_SHOULD_PUBLISH='true'
+            echo "Version not found, will publish: $WEB_NAME@$WEB_VERSION"
+          fi
+
+          if [[ "$CORE_SHOULD_PUBLISH" == 'true' || "$WEB_SHOULD_PUBLISH" == 'true' ]]; then
+            echo 'should_publish_any=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'should_publish_any=false' >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "core_should_publish=$CORE_SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "web_should_publish=$WEB_SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+
+      - name: Install Playwright browsers
+        if: steps.publish_status.outputs.should_publish_any == 'true'
+        run: |
+          npx playwright install --with-deps chromium
+
+      # 预先执行完整校验，提前暴露 prepublishOnly 依赖的测试与构建错误
+      - name: Validate project before publish
+        if: steps.publish_status.outputs.should_publish_any == 'true'
+        run: |
+          yarn test:all
           yarn build:all
 
-      # 发布到 npm。latest/dev/beta 分别使用对应的 dist-tag
-      # 需要在项目 Secrets 配置 NPM_TOKEN（具有发布权限的 npm 令牌）
-      - name: Publish to npm
-        if: steps.version.outputs.should_publish == 'true'
+      - name: Publish @system-ui-js/multi-drag-core
+        if: steps.publish_status.outputs.core_should_publish == 'true'
+        working-directory: packages/multi-drag-core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # 使用 npm publish 以触发 prepublishOnly（包含构建），并指定 tag 与访问级别
+          npm publish --tag "$PUBLISH_TAG" --access public
+
+      - name: Publish @system-ui-js/multi-drag
+        if: steps.publish_status.outputs.web_should_publish == 'true'
+        working-directory: packages/multi-drag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
           npm publish --tag "$PUBLISH_TAG" --access public
 
       # 确保预发布标签的 dist-tag 指向当前 version（支持 dev 和 beta）
-      - name: Ensure pre-release dist-tag
-        if: (env.PUBLISH_TAG == 'dev' || env.PUBLISH_TAG == 'beta') && steps.version.outputs.should_publish == 'true'
+      - name: Ensure pre-release dist-tag for core
+        if: (env.PUBLISH_TAG == 'dev' || env.PUBLISH_TAG == 'beta') && steps.publish_status.outputs.core_should_publish == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          PKG_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).name)")
-          VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('package.json','utf8')).version)")
-          echo "Ensure dist-tag: ${PUBLISH_TAG} -> $VERSION"
-          # 若版本已存在，也可重复设置 tag；若已指向则不变
+          PKG_NAME='${{ steps.packages.outputs.core_name }}'
+          VERSION='${{ steps.packages.outputs.core_version }}'
+          echo "Ensure dist-tag: ${PUBLISH_TAG} -> $PKG_NAME@$VERSION"
+          npm dist-tag add "$PKG_NAME@$VERSION" "$PUBLISH_TAG" || true
+          npm dist-tag ls "$PKG_NAME"
+
+      - name: Ensure pre-release dist-tag for web
+        if: (env.PUBLISH_TAG == 'dev' || env.PUBLISH_TAG == 'beta') && steps.publish_status.outputs.web_should_publish == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PKG_NAME='${{ steps.packages.outputs.web_name }}'
+          VERSION='${{ steps.packages.outputs.web_version }}'
+          echo "Ensure dist-tag: ${PUBLISH_TAG} -> $PKG_NAME@$VERSION"
           npm dist-tag add "$PKG_NAME@$VERSION" "$PUBLISH_TAG" || true
           npm dist-tag ls "$PKG_NAME"
