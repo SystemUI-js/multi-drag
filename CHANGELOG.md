@@ -6,27 +6,19 @@
 
 ---
 
-## [0.3.0]
+## [current]
 
 ### 新增功能 ✨
 
-- 拆分 workspace，新增 `@system-ui-js/multi-drag-core` 包
-- 新增平台无关的归一化输入控制器、几何计算与惯性推导能力
-- 新增 Demo，对比 core 驱动示例与 Web 封装示例
+### 修复问题 🐛
 
 ### 代码重构 🔄
 
-- 将原单包结构重构为 `packages/multi-drag-core`、`packages/multi-drag`、`apps/demo`
-- 将 DOM/Web 事件归一化与宿主 pose 读写收敛到 `multi-drag` 兼容层
-- 让 `Drag` / `Rotate` / `Scale` / `Mixin` 基于 core 控制器工作
-
 ### 开发工具 🔧
 
-- 调整根目录构建、测试、E2E 脚本为 workspace 流程
-- 新增 core / web 分层单测与 demo 构建校验
-- 补充 `build:all` workspace 脚本，修复 GitHub Actions 中的构建命令缺失问题
+### 文档更新 📚
 
-## [current]
+## [0.4.0]
 
 ### 新增功能 ✨
 
@@ -35,6 +27,8 @@
   - 删除 make 函数体系，全面采用类实现方式
   - 优化结构，提升代码可维护性
 - 导出 `Finger`、`FingerOperationType` 与相关类型，便于外部使用
+- **触摸笔压力感知**
+  - 支持触摸笔压力感知的拖拽交互
 
 ### 修复问题 🐛
 
@@ -43,6 +37,7 @@
 - 修复 rotate 和 scale 的 handleEnd 没有响应事件的问题
 - 修复 global.PointerEvent 类型安全问题，使用 'as never' 进行类型转换
 - 修复 CI 报错问题
+- 修复 pressure 测试文件的格式问题
 
 ### 代码重构 🔄
 
@@ -56,13 +51,15 @@
 - 调整 GitHub Actions 发布与部署配置
 - **CI/CD 优化**
   - 优化 CI 脚本，拆分 PR 和发布流程
-  - **发布流程升级**：采用 version/\* 分支触发方式
+  - **发布流程升级**：采用 version/* 分支触发方式
     - 正式版：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z`
     - dev 预发布：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z-dev.N`
     - beta 预发布：在 `version/X.Y.Z` 分支推送，package.json 版本为 `X.Y.Z-beta.N`
   - 新增 CI PR 工作流和发布工作流
   - 新增同步 master 到 dev 的工作流
   - 添加 .editorconfig 统一编辑器配置
+  - 添加 Playwright 浏览器安装步骤
+  - 更新发布工作流以支持多包管理和版本验证
 
 - **TypeScript 配置**
   - 更新 TypeScript 配置为 ES2022
@@ -89,6 +86,28 @@
 - 新增 AGENTS.md 文档，定义编辑器默认值和可用的代理
 
 ---
+
+## [0.3.0]
+
+### 新增功能 ✨
+
+- 拆分 workspace，新增 `@system-ui-js/multi-drag-core` 包
+- 新增平台无关的归一化输入控制器、几何计算与惯性推导能力
+- 新增 Demo，对比 core 驱动示例与 Web 封装示例
+
+### 代码重构 🔄
+
+- 将原单包结构重构为 `packages/multi-drag-core`、`packages/multi-drag`、`apps/demo`
+- 将 DOM/Web 事件归一化与宿主 pose 读写收敛到 `multi-drag` 兼容层
+- 让 `Drag` / `Rotate` / `Scale` / `Mixin` 基于 core 控制器工作
+
+### 开发工具 🔧
+
+- 调整根目录构建、测试、E2E 脚本为 workspace 流程
+- 新增 core / web 分层单测与 demo 构建校验
+- 补充 `build:all` workspace 脚本，修复 GitHub Actions 中的构建命令缺失问题
+
+
 
 ## [0.1.0] - 2025-08-19
 
