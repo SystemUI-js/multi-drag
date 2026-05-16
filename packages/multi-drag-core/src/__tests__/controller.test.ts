@@ -78,6 +78,36 @@ describe('GestureController', () => {
     expect(snapshot.pose.scale).not.toBe(1)
   })
 
+  it('propagates pointer pressure to snapshots', () => {
+    const controller = new GestureController({ features: { drag: true } })
+
+    const startSnapshot = controller.process(
+      {
+        pointerId: 1,
+        phase: PointerPhase.Start,
+        point: { x: 10, y: 10 },
+        timestamp: 0,
+        pressure: 0.25
+      },
+      { pose: createPose() }
+    )
+
+    expect(startSnapshot.activePointers[0].pressure).toBe(0.25)
+
+    const moveSnapshot = controller.process(
+      {
+        pointerId: 1,
+        phase: PointerPhase.Move,
+        point: { x: 20, y: 20 },
+        timestamp: 16,
+        pressure: 0.75
+      },
+      { pose: createPose() }
+    )
+
+    expect(moveSnapshot.activePointers[0].pressure).toBe(0.75)
+  })
+
   it('keeps the two-finger pose when one pointer lifts and continues from it', () => {
     const controller = new GestureController({ features: { drag: true } })
     const pose = createPose()

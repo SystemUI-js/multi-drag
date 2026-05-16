@@ -36,6 +36,7 @@ export interface NormalizedPointerInput {
   point: Point
   phase: PointerPhase
   timestamp: number
+  pressure?: number
   pointerType?: string
   isPrimary?: boolean
 }
@@ -52,6 +53,7 @@ export interface GesturePointerSnapshot {
   currentPoint: Point
   startTimestamp: number
   currentTimestamp: number
+  pressure?: number
 }
 
 export interface GestureComputeContext {

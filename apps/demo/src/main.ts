@@ -1,6 +1,8 @@
 import './style.css'
 import {
   Drag,
+  DragOperationType,
+  Finger,
   Mixin,
   MixinType,
   defaultSetPose,
@@ -55,6 +57,20 @@ appElement.innerHTML = `
                 </div>
             </div>
         </section>
+        <section class="panel">
+            <div>
+                <h2>压力敏感拖拽演示</h2>
+                <p>使用触摸笔或 Force Touch 触摸板拖拽，观察压力对视觉效果的影响。</p>
+            </div>
+            <div class="drag-zone">
+                <div class="drag-container">
+                    <div class="draggable-item pressure-item" id="pressure-item">
+                        <span class="pressure-label">压力敏感拖拽</span>
+                        <span class="pressure-value" id="pressure-value">0.50</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 `
 
@@ -63,11 +79,13 @@ const item2 = document.getElementById('item2') as HTMLElement
 const item3 = document.getElementById('item3') as HTMLElement
 const joystick1 = document.getElementById('joystick1') as HTMLElement
 const joystick2 = document.getElementById('joystick2') as HTMLElement
+const pressureItem = document.getElementById('pressure-item') as HTMLElement
 
 for (const [element, top] of [
   [item1, 20],
   [item2, 120],
-  [item3, 220]
+  [item3, 220],
+  [pressureItem, 20]
 ] as const) {
   element.style.position = 'absolute'
   element.style.left = '24px'
@@ -117,4 +135,12 @@ new Drag(joystick1, {
 new Drag(joystick2, {
   setPose: limit75,
   setPoseOnEnd: joystickGoBack
+})
+
+const pressureDrag = new Drag(pressureItem)
+const pressureValue = document.getElementById('pressure-value') as HTMLElement
+pressureDrag.addEventListener(DragOperationType.Move, (fingers: Finger[]) => {
+  const pressure = fingers[0]?.getLastOperation()?.pressure ?? 0.5
+  pressureItem.style.setProperty('--pressure', String(pressure))
+  pressureValue.textContent = pressure.toFixed(2)
 })
