@@ -4,13 +4,13 @@ import {
   computeScaleDelta
 } from './geometry'
 import {
-  GesturePhase,
-  PointerPhase,
   type GestureComputeContext,
   type GestureControllerOptions,
+  GesturePhase,
   type GesturePointerSnapshot,
   type GestureSnapshot,
   type NormalizedPointerInput,
+  PointerPhase,
   type Pose
 } from './types'
 
@@ -96,7 +96,8 @@ export class GestureController {
       startPoint: { ...input.point },
       currentPoint: { ...input.point },
       startTimestamp: input.timestamp,
-      currentTimestamp: input.timestamp
+      currentTimestamp: input.timestamp,
+      pressure: input.pressure
     })
   }
 
@@ -107,6 +108,7 @@ export class GestureController {
   ) {
     pointer.currentPoint = { ...input.point }
     pointer.currentTimestamp = input.timestamp
+    pointer.pressure = input.pressure
 
     if (!this.initialPose) {
       this.initialPose = clonePose(context.pose)
@@ -201,7 +203,8 @@ export class GestureController {
         startPoint: { ...pointer.startPoint },
         currentPoint: { ...pointer.currentPoint },
         startTimestamp: pointer.startTimestamp,
-        currentTimestamp: pointer.currentTimestamp
+        currentTimestamp: pointer.currentTimestamp,
+        pressure: pointer.pressure
       }))
     }
   }

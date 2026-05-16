@@ -1,4 +1,5 @@
 import type { Point } from '@system-ui-js/multi-drag-core'
+import { normalizePressure } from '../dom/normalize-pointer-event'
 
 export enum FingerOperationType {
   Start = 'start',
@@ -10,6 +11,7 @@ export interface FingerPathItem {
   point: Point
   timestamp: number
   type: FingerOperationType
+  pressure?: number
   event?: PointerEvent
 }
 
@@ -40,6 +42,7 @@ export class Finger {
       point: { x: event.clientX, y: event.clientY },
       timestamp: event.timeStamp,
       type,
+      pressure: normalizePressure(event),
       event
     }
     this.path.push(item)

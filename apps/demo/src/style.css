@@ -107,3 +107,25 @@ body {
     background: #818cf8;
     cursor: grab;
 }
+
+.pressure-item {
+    --pressure: 0.5;
+
+    opacity: calc(0.4 + var(--pressure) * 0.6);
+    transform: scale(calc(0.5 + var(--pressure)));
+    box-shadow: 0 calc(4px * var(--pressure)) calc(12px * var(--pressure)) rgba(99, 102, 241, calc(0.3 * var(--pressure)));
+    transition: opacity 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+
+.pressure-item .pressure-label {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.pressure-item .pressure-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: #818cf8;
+    font-variant-numeric: tabular-nums;
+}
