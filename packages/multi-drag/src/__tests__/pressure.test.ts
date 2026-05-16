@@ -42,7 +42,9 @@ describe('pressure support', () => {
 
   it('normalizes mouse pressure only while buttons are active', () => {
     expect(normalizePressure(createEvent('mouse', { buttons: 1 }))).toBe(0.5)
-    expect(normalizePressure(createEvent('mouse', { buttons: 0 }))).toBeUndefined()
+    expect(
+      normalizePressure(createEvent('mouse', { buttons: 0 }))
+    ).toBeUndefined()
   })
 
   it('normalizes touch pressure and Safari webkitForce', () => {
