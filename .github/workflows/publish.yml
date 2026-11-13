@@ -1,9 +1,10 @@
-name: Publish to npm (version branches)
+name: Publish to npm (tags)
 
 on:
   push:
-    branches:
-      - 'version/*'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
 
 permissions:
   contents: read
@@ -23,9 +24,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24.15.0
           registry-url: https://registry.npmjs.org
           cache: yarn
+
+      # Tag and package versions must agree before any install/build/publish.
+      - name: Validate release tag and classify dist-tag
+        shell: bash
+        run: node .github/scripts/release-metadata.cjs validate "${GITHUB_REF#refs/tags/}" package.json packages/multi-drag-core/package.json packages/multi-drag/package.json
 
       # 使用 Yarn 安装依赖（项目包含 yarn.lock）
       - name: Install dependencies
@@ -34,44 +40,15 @@ jobs:
           yarn --version
           yarn install --frozen-lockfile
 
-      # 解析分支类型、收集待发布包信息，并校验版本一致性
-      - name: Classify branch and collect package metadata
+      # 收集已通过 tag 一致性校验的双包信息
+      - name: Collect package metadata
         id: packages
         shell: bash
         run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          BRANCH_VERSION="${BRANCH#version/}"
-
           CORE_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag-core/package.json','utf8')).name)")
           CORE_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag-core/package.json','utf8')).version)")
           WEB_NAME=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag/package.json','utf8')).name)")
           WEB_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('packages/multi-drag/package.json','utf8')).version)")
-
-          echo "Detected branch: $BRANCH"
-          echo "Branch version: $BRANCH_VERSION"
-          echo "Core package: $CORE_NAME@$CORE_VERSION"
-          echo "Web package: $WEB_NAME@$WEB_VERSION"
-
-          if [[ "$CORE_VERSION" != "$WEB_VERSION" ]]; then
-            echo "Package versions must stay in sync: $CORE_VERSION != $WEB_VERSION"
-            exit 1
-          fi
-
-          if [[ "$BRANCH_VERSION" != "$CORE_VERSION" ]]; then
-            echo "Branch version $BRANCH_VERSION does not match package version $CORE_VERSION"
-            exit 1
-          fi
-
-          if [[ "$CORE_VERSION" =~ -dev ]]; then
-            PUBLISH_TAG='dev'
-            echo 'Version type: Dev Pre-release'
-          elif [[ "$CORE_VERSION" =~ -beta ]]; then
-            PUBLISH_TAG='beta'
-            echo 'Version type: Beta Pre-release'
-          else
-            PUBLISH_TAG='latest'
-            echo 'Version type: Release'
-          fi
 
           echo "PUBLISH_TAG=$PUBLISH_TAG" >> "$GITHUB_ENV"
           echo "publish_tag=$PUBLISH_TAG" >> "$GITHUB_OUTPUT"
