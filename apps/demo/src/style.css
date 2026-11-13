@@ -42,6 +42,74 @@ body {
     margin: 0 0 8px;
 }
 
+/* Hero 顶部布局：标题区与语言切换控件，窄屏允许换行避免重叠 */
+.hero-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.hero-text {
+    flex: 1 1 320px;
+    min-width: 0;
+}
+
+/* 语言切换按钮组：沿用现有深色卡片与靛蓝描边体系 */
+.language-switcher {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.7);
+}
+
+.language-button {
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: transparent;
+    color: #c7d2fe;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
+}
+
+.language-button:hover {
+    color: #eef2ff;
+    border-color: rgba(129, 140, 248, 0.55);
+}
+
+/* 键盘可达焦点样式 */
+.language-button:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 2px;
+}
+
+/* 当前语言的高对比 active 状态 */
+.language-button.is-active {
+    background: #6366f1;
+    border-color: #818cf8;
+    color: #ffffff;
+}
+
+/* 窄屏：语言控件换行到标题下方，避免与长标题重叠 */
+@media (max-width: 480px) {
+    .hero-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .language-switcher {
+        align-self: flex-start;
+    }
+}
+
 .drag-zone {
     margin-top: 16px;
     width: 100%;
